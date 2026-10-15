@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QueryPulse — Intelligent Conversational Data Engine</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          animation: {
+            'gradient-x': 'gradient-x 6s ease infinite',
+          },
+          keyframes: {
+            'gradient-x': {
+              '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
+              '50%': { 'background-size': '200% 200%', 'background-position': 'right center' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { background-color: #07090e; color: #f8fafc; }
+    .glass-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .glass-card:hover { border-color: rgba(99, 102, 241, 0.4); }
+    .hero-glow {
+      background: radial-gradient(circle at 50% 15%, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.06) 35%, transparent 70%);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+
+<body class="flex flex-row h-screen w-screen overflow-hidden bg-[#07090e] text-slate-100">
+
+  <!-- ==================== LEFT SIDEBAR ==================== -->
+  <aside class="w-80 min-w-[320px] max-w-[320px] h-screen flex flex-col justify-between border-r border-slate-800/80 bg-[#0a0e17] p-5 overflow-hidden flex-shrink-0 z-20">
+    
+    <div class="flex flex-col h-full overflow-hidden">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3 mb-5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20">
+          <i data-lucide="zap" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-extrabold text-white flex items-center gap-1.5 tracking-tight">
+            QueryPulse
+            <span class="text-[9px] font-bold uppercase bg-gradient-to-r from-indigo-500 to-violet-500 text-white px-2 py-0.5 rounded-full shadow-sm">Enterprise</span>
+          </h1>
+          <p class="text-[11px] text-slate-400">PostgreSQL BI Engine</p>
+        </div>
+      </div>
+
+      <!-- ACTIVE DATABASE CONTROLS (BYODB) -->
+      <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-800 mb-5 shadow-inner space-y-2.5">
+        
+        <div class="flex items-center justify-between">
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="database" class="w-3 h-3 text-indigo-400"></i> Active Database
+          </label>
+          <span id="custom-db-tag" class="hidden text-[9px] font-mono text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-800/50">Custom DB</span>
+        </div>
+        
+        <select id="db-selector" onchange="onDatabaseChange(this.value)" 
+          class="w-full bg-slate-950 border border-slate-700/80 text-xs font-semibold text-indigo-300 rounded-lg px-2.5 py-2 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+          <option value="dvdrental">🎬 dvdrental (Sandbox Demo)</option>
+          <option value="onlinebookstore">📚 onlinebookstore (Sandbox Demo)</option>
+        </select>
+
+        <!-- Connect Custom DB Button -->
+        <button onclick="openCustomDbModal()" 
+          class="w-full py-2 px-3 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center justify-center gap-2 transition-all">
+          <i data-lucide="plug" class="w-3.5 h-3.5"></i>
+          <span>Connect Your Own DB</span>
+        </button>
+
+        <button id="disconnect-btn" onclick="disconnectCustomDb()" 
+          class="hidden w-full py-1.5 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all">
+          <i data-lucide="power" class="w-3 h-3"></i>
+          <span>Disconnect & Revert to Demo</span>
+        </button>
+
+      </div>
+
+      <!-- Schema Explorer Header -->
+      <div class="flex items-center justify-between mb-2 px-1">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+          <i data-lucide="layers" class="w-3.5 h-3.5 text-indigo-400"></i> Relational Tables
+        </span>
+        <span id="table-count" class="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md font-semibold">--</span>
+      </div>
+
+      <!-- Tables List -->
+      <div id="table-list" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
+        <div class="text-slate-500 p-4 text-center animate-pulse">Loading database metadata...</div>
+      </div>
+
+      <!-- History Footer -->
+      <div class="mt-4 pt-4 border-t border-slate-800/80">
+        <div class="flex items-center justify-between mb-2 px-1">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <i data-lucide="history" class="w-3.5 h-3.5 text-slate-400"></i> Recent Queries
+          </span>
+        </div>
+        <div id="history-list" class="max-h-36 overflow-y-auto space-y-1.5 text-xs pr-1">
+          <p class="text-slate-500 italic text-[11px] px-1">No previous queries run yet.</p>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN SCROLLABLE CANVAS ==================== -->
+  <main class="flex-1 min-w-0 h-screen overflow-y-auto flex flex-col hero-glow">
+
+    <!-- Top Sticky Bar -->
+    <header class="h-14 border-b border-slate-800/70 px-8 flex items-center justify-between bg-[#0a0e17]/80 backdrop-blur sticky top-0 z-30 flex-shrink-0">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Connected: <span id="header-db-name" class="text-indigo-400 font-mono">dvdrental</span></span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span class="text-xs px-3 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-slate-300 flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> AST Guard Active
+        </span>
+        <span class="text-xs px-3 py-1 rounded-full bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 flex items-center gap-1.5 font-medium">
+          <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Groq LPU Powered
+        </span>
+      </div>
+    </header>
+
+    <div class="p-8 max-w-6xl mx-auto w-full space-y-10 pb-20">
+
+      <!-- ==================== GRAND HERO SECTION ==================== -->
+      <section class="text-center pt-4 pb-2 space-y-4">
+        
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold shadow-sm backdrop-blur">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i>
+          <span>Zero-Trust Natural Language PostgreSQL Engine</span>
+        </div>
+
+        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight">
+          <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 animate-gradient-x">
+            QueryPulse
+          </span>
+        </h1>
+
+        <p class="text-lg md:text-xl font-semibold text-slate-200 max-w-2xl mx-auto tracking-wide">
+          Intelligent Conversational Data Engine for PostgreSQL
+        </p>
+
+        <p class="text-xs md:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          Ask questions in plain <strong class="text-slate-200">English or Hinglish</strong> across any connected PostgreSQL database. QueryPulse generates verified queries, enforces AST security, and renders instant visual charts.
+        </p>
+
+        <!-- Feature Pills -->
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs font-medium">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-400"></i> Zero-Trust AST Guard
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs font-medium">
+            <i data-lucide="plug" class="w-3.5 h-3.5 text-indigo-400"></i> BYODB (Connect Any Postgres)
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs font-medium">
+            <i data-lucide="gauge" class="w-3.5 h-3.5 text-amber-400"></i> EXPLAIN Cost Analyzer
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs font-medium">
+            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-purple-400"></i> Auto Chart Visualizer
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== QUERY INPUT HERO BOX ==================== -->
+      <section class="glass-card p-6 rounded-3xl shadow-2xl relative overflow-hidden transition-all">
+        
+        <div class="flex items-center justify-between mb-3">
+          <label class="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <i data-lucide="message-square-code" class="w-4 h-4 text-indigo-400"></i>
+            Ask a business question on <span id="prompt-db-name" class="text-indigo-400 font-mono">dvdrental</span>:
+          </label>
+          <span class="text-[11px] text-slate-400">Press <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-slate-300">Enter</kbd> to execute</span>
+        </div>
+
+        <div class="relative">
+          <textarea id="query-input" rows="2" 
+            placeholder="e.g. 'Top 5 most rented films kaunsi hain?' or 'Show me the highest revenue generating customers'"
+            class="w-full bg-slate-950/80 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 font-sans resize-none pr-36 shadow-inner transition-all"></textarea>
+          
+          <button id="run-btn" onclick="executeAnalysis()"
+            class="absolute right-3.5 bottom-4 px-5 py-2.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95">
+            <i data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>
+            <span>Run Analysis</span>
+          </button>
+        </div>
+
+        <!-- Sample Prompts -->
+        <div class="mt-4">
+          <span class="text-xs text-slate-400 font-semibold block mb-2">Sample Queries for Active Database (Click to Run):</span>
+          <div id="quick-prompts-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== LOADING STATE ==================== -->
+      <div id="loading-state" class="hidden glass-card p-10 rounded-3xl text-center space-y-4 border border-indigo-500/30 shadow-2xl">
+        <div class="relative inline-flex">
+          <div class="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <i data-lucide="cpu" class="w-5 h-5 text-indigo-400 animate-pulse"></i>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white">Synthesizing Query & Enforcing Safeguards</h3>
+          <p class="text-xs text-slate-400 mt-1">NL to SQL $\rightarrow$ AST Security Check $\rightarrow$ Safe Execution $\rightarrow$ Visuals</p>
+        </div>
+      </div>
+
+      <!-- ==================== ERROR STATE ==================== -->
+      <div id="error-state" class="hidden bg-rose-950/40 border border-rose-800 p-5 rounded-2xl text-rose-300 text-xs space-y-2 shadow-xl">
+        <div class="font-bold flex items-center gap-2 text-sm text-rose-300">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i> Query Execution or Security Policy Rejected
+        </div>
+        <p id="error-message" class="text-rose-200 font-mono bg-rose-950/60 p-3 rounded-lg border border-rose-900/60"></p>
+      </div>
+
+      <!-- ==================== RESULTS CANVAS ==================== -->
+      <div id="results-canvas" class="hidden space-y-6">
+
+        <!-- Executive AI Insight Card -->
+        <div class="bg-gradient-to-r from-indigo-950/70 via-slate-900 to-violet-950/60 border border-indigo-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+          <div class="flex items-center gap-2.5 mb-2.5">
+            <span class="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+              <i data-lucide="lightbulb" class="w-4 h-4"></i>
+            </span>
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-300">Executive AI Insight</span>
+          </div>
+          <p id="insight-text" class="text-base text-slate-100 font-medium leading-relaxed"></p>
+        </div>
+
+        <!-- Validated SQL Query Box with EXPLAIN COST -->
+        <div class="glass-card rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
+          <div class="bg-slate-900 px-5 py-3 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <i data-lucide="terminal" class="w-4 h-4 text-indigo-400"></i>
+              <span class="text-xs font-bold text-slate-200 uppercase tracking-wide">Validated PostgreSQL Statement</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span id="plan-pill" class="text-xs font-mono text-indigo-300 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800/60"></span>
+              <span id="meta-pill" class="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50"></span>
+              <button onclick="copySQL()" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1 rounded-md transition-colors">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+              </button>
+            </div>
+          </div>
+          <div class="p-5 bg-slate-950 overflow-x-auto">
+            <pre><code id="sql-display" class="font-mono text-xs text-emerald-300 leading-relaxed"></code></pre>
+          </div>
+        </div>
+
+        <!-- Interactive Visuals & Data Tabs -->
+        <div class="glass-card rounded-3xl p-6 border border-slate-800 shadow-2xl">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4 mb-5">
+            
+            <div class="flex space-x-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
+              <button id="tab-chart-btn" onclick="switchTab('chart')" 
+                class="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white flex items-center gap-2 shadow-sm transition-all">
+                <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Interactive Chart
+              </button>
+              <button id="tab-table-btn" onclick="switchTab('table')" 
+                class="px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+                <i data-lucide="table" class="w-4 h-4"></i> Data Table
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <div id="chart-type-picker" class="flex space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                <button onclick="changeChartType('bar')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:text-white rounded hover:bg-slate-800 transition-colors">Bar</button>
+                <button onclick="changeChartType('line')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:text-white rounded hover:bg-slate-800 transition-colors">Line</button>
+                <button onclick="changeChartType('doughnut')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:text-white rounded hover:bg-slate-800 transition-colors">Doughnut</button>
+              </div>
+
+              <button onclick="downloadCSV()" 
+                class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Chart Area -->
+          <div id="chart-tab" class="h-84 w-full relative">
+            <canvas id="analytics-chart" style="max-height: 340px;"></canvas>
+            <p id="no-chart-msg" class="hidden text-xs text-slate-500 text-center pt-24 italic">This result structure is best analyzed using the Data Table tab.</p>
+          </div>
+
+          <!-- Table Area -->
+          <div id="table-tab" class="hidden max-h-[420px] overflow-y-auto rounded-xl border border-slate-800">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead id="table-head" class="bg-slate-900 text-slate-400 uppercase tracking-wider text-[11px] sticky top-0 border-b border-slate-800"></thead>
+              <tbody id="table-body" class="divide-y divide-slate-800/60 font-mono"></tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==================== BYODB CONNECT MODAL ==================== -->
+  <div id="custom-db-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-indigo-500/40 space-y-4">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2 text-white font-bold text-base">
+          <div class="p-2 bg-indigo-600/20 rounded-xl text-indigo-400"><i data-lucide="database" class="w-5 h-5"></i></div>
+          <span>Connect Your PostgreSQL Database</span>
+        </div>
+        <button onclick="closeCustomDbModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Paste your PostgreSQL connection string. Your credentials are used <strong>only in your active browser session</strong> and are never saved or shared with anyone.
+      </p>
+
+      <div class="space-y-2">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">PostgreSQL Connection URI:</label>
+        <input type="text" id="custom-db-uri" 
+          placeholder="postgresql://user:password@ep-xyz.neon.tech/neondb?sslmode=require"
+          class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+        <p class="text-[10px] text-slate-400">Compatible with Neon.tech, Supabase, AWS RDS, Render Postgres, or local instances.</p>
+      </div>
+
+      <div id="modal-error" class="hidden p-3 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs font-mono"></div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button onclick="closeCustomDbModal()" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white">Cancel</button>
+        <button id="modal-connect-btn" onclick="submitCustomDb()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-2">
+          <i data-lucide="plug" class="w-3.5 h-3.5"></i> Connect Database
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    // Generate or retrieve persistent Session ID for this browser tab
+    let sessionId = sessionStorage.getItem("qp_session_id");
+    if (!sessionId) {
+      sessionId = "sess_" + Math.random().toString(36).substring(2, 12);
+      sessionStorage.setItem("qp_session_id", sessionId);
+    }
+
+    try { if (window.lucide) lucide.createIcons(); } catch(e){}
+    let currentChart = null;
+    let currentData = null;
+    let currentColumns = null;
+    let selectedChartType = 'bar';
+    let currentActiveDB = 'dvdrental';
+    let isCustomDbConnected = false;
+
+    const inputEl = document.getElementById('query-input');
+    if (inputEl) {
+      inputEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          executeAnalysis();
+        }
+      });
+    }
+
+    const PROMPTS = {
+      dvdrental: [
+        { label: "Film Rentals", text: "Top 5 most rented films kaunsi hain?", icon: "film", color: "text-indigo-400" },
+        { label: "Customer Revenue", text: "Which customer has paid the highest total amount?", icon: "wallet", color: "text-emerald-400" },
+        { label: "Rating Breakdown", text: "Total films count grouped by rating", icon: "pie-chart", color: "text-violet-400" },
+        { label: "Star Cast", text: "Top 10 actors who have acted in the most films", icon: "star", color: "text-amber-400" }
+      ],
+      onlinebookstore: [
+        { label: "Top Books", text: "Sabse zyada bikne wali top 5 books kaunsi hain?", icon: "book-open", color: "text-indigo-400" },
+        { label: "Author Sales", text: "Which author generated the highest total book sales?", icon: "user-check", color: "text-emerald-400" },
+        { label: "Genre Breakdown", text: "Total count of books grouped by genre/category", icon: "bookmark", color: "text-violet-400" },
+        { label: "Expensive Books", text: "Top 5 most expensive books in the store", icon: "dollar-sign", color: "text-amber-400" }
+      ]
+    };
+
+    function renderPrompts(dbName) {
+      const container = document.getElementById('quick-prompts-container');
+      const list = PROMPTS[dbName] || [
+        { label: "Overview", text: "Select all table names and total rows count", icon: "database", color: "text-indigo-400" },
+        { label: "Top Records", text: "Show top 5 records from the primary table", icon: "list", color: "text-emerald-400" }
+      ];
+      container.innerHTML = list.map(p => `
+        <button onclick="setQuery('${p.text}')" 
+          class="glass-card p-3 rounded-xl text-left transition-all hover:bg-slate-900 group">
+          <div class="flex items-center gap-1.5 ${p.color} text-xs font-bold mb-1">
+            <i data-lucide="${p.icon}" class="w-3.5 h-3.5"></i> ${p.label}
+          </div>
+          <p class="text-[11px] text-slate-300 font-medium truncate">${p.text}</p>
+        </button>
+      `).join('');
+      try { if (window.lucide) lucide.createIcons(); } catch(e){}
+    }
+
+    async function loadDatabases() {
+      try {
+        const res = await fetch(`${API_BASE}/databases`);
+        const data = await res.json();
+        const selector = document.getElementById('db-selector');
+        selector.innerHTML = '';
+        
+        data.databases.forEach(db => {
+          const opt = document.createElement('option');
+          opt.value = db;
+          opt.innerText = db === 'dvdrental' ? '🎬 dvdrental (Sandbox Demo)' : (db === 'onlinebookstore' ? '📚 onlinebookstore (Sandbox Demo)' : `🗄️ ${db}`);
+          if (db === data.current_database) opt.selected = true;
+          selector.appendChild(opt);
+        });
+
+        currentActiveDB = data.current_database;
+        updateDbTitles(currentActiveDB);
+        loadSchema(currentActiveDB);
+        renderPrompts(currentActiveDB);
+      } catch (e) {
+        console.error("Could not fetch databases:", e);
+        loadSchema('dvdrental');
+        renderPrompts('dvdrental');
+      }
+    }
+
+    async function onDatabaseChange(newDb) {
+      currentActiveDB = newDb;
+      updateDbTitles(newDb);
+      renderPrompts(newDb);
+      
+      document.getElementById('table-list').innerHTML = `<div class="text-slate-500 p-4 text-center animate-pulse">Switching to ${newDb}...</div>`;
+      document.getElementById('results-canvas').classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API_BASE}/switch-db`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ database: newDb })
+        });
+        const data = await res.json();
+        renderTables(data.tables);
+      } catch (e) {
+        console.error("Error switching DB:", e);
+      }
+    }
+
+    function openCustomDbModal() {
+      document.getElementById('custom-db-modal').classList.remove('hidden');
+      document.getElementById('modal-error').classList.add('hidden');
+    }
+
+    function closeCustomDbModal() {
+      document.getElementById('custom-db-modal').classList.add('hidden');
+    }
+
+    async function submitCustomDb() {
+      const uri = document.getElementById('custom-db-uri').value.trim();
+      const errBox = document.getElementById('modal-error');
+      const btn = document.getElementById('modal-connect-btn');
+      if (!uri) return;
+
+      btn.innerText = "Verifying...";
+      btn.disabled = true;
+      errBox.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API_BASE}/connect-custom-db`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, connection_uri: uri })
+        });
+
+        const data = await res.json();
+        btn.innerText = "Connect Database";
+        btn.disabled = false;
+
+        if (!res.ok) {
+          errBox.innerText = data.detail || "Connection failed";
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        isCustomDbConnected = true;
+        closeCustomDbModal();
+        document.getElementById('custom-db-tag').classList.remove('hidden');
+        document.getElementById('disconnect-btn').classList.remove('hidden');
+        document.getElementById('db-selector').disabled = true;
+        updateDbTitles("Custom Database");
+        renderTables(data.tables);
+        renderPrompts("custom");
+        alert("🎉 Custom PostgreSQL Database connected to your session!");
+
+      } catch (e) {
+        btn.innerText = "Connect Database";
+        btn.disabled = false;
+        errBox.innerText = e.message;
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    async function disconnectCustomDb() {
+      await fetch(`${API_BASE}/disconnect-custom-db?session_id=${sessionId}`, { method: 'POST' });
+      isCustomDbConnected = false;
+      document.getElementById('custom-db-tag').classList.add('hidden');
+      document.getElementById('disconnect-btn').classList.add('hidden');
+      document.getElementById('db-selector').disabled = false;
+      loadDatabases();
+    }
+
+    function updateDbTitles(dbName) {
+      document.getElementById('header-db-name').innerText = dbName;
+      document.getElementById('prompt-db-name').innerText = dbName;
+    }
+
+    async function loadSchema(dbName) {
+      try {
+        const res = await fetch(`${API_BASE}/tables?db=${dbName}&session_id=${sessionId}`);
+        const data = await res.json();
+        renderTables(data);
+      } catch (e) {
+        console.error("Could not load schema:", e);
+      }
+    }
+
+    function renderTables(tablesData) {
+      const container = document.getElementById('table-list');
+      container.innerHTML = '';
+      const tables = Object.keys(tablesData);
+      document.getElementById('table-count').innerText = `${tables.length} tables`;
+
+      tables.forEach(tableName => {
+        const tableDetails = tablesData[tableName];
+        const div = document.createElement('div');
+        div.className = "rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 hover:border-indigo-500/40 transition-colors";
+        
+        let colsHtml = tableDetails.columns.slice(0, 3).map(c => 
+          `<span class="inline-block text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded mr-1 mb-1 font-mono">${c.name}</span>`
+        ).join('');
+        
+        if(tableDetails.columns.length > 3) {
+          colsHtml += `<span class="text-[9px] text-indigo-400 font-medium">+${tableDetails.columns.length - 3} cols</span>`;
+        }
+
+        div.innerHTML = `
+          <div class="font-bold text-slate-200 flex items-center justify-between mb-1.5">
+            <span class="flex items-center gap-1.5"><i data-lucide="table-2" class="w-3.5 h-3.5 text-indigo-400"></i> ${tableName}</span>
+            <span class="text-[10px] font-mono text-slate-500">${tableDetails.columns.length}</span>
+          </div>
+          <div class="flex flex-wrap">${colsHtml}</div>
+        `;
+        container.appendChild(div);
+      });
+      try { if (window.lucide) lucide.createIcons(); } catch(e){}
+    }
+
+    function setQuery(text) {
+      document.getElementById('query-input').value = text;
+      executeAnalysis();
+    }
+
+    async function executeAnalysis() {
+      const input = document.getElementById('query-input');
+      const question = input.value.trim();
+      if (!question) return;
+
+      document.getElementById('loading-state').classList.remove('hidden');
+      document.getElementById('error-state').classList.add('hidden');
+      document.getElementById('results-canvas').classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API_BASE}/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            question, 
+            database: currentActiveDB,
+            session_id: sessionId 
+          })
+        });
+
+        const data = await res.json();
+        document.getElementById('loading-state').classList.add('hidden');
+
+        if (!res.ok) {
+          document.getElementById('error-message').innerText = data.detail || 'An error occurred';
+          document.getElementById('error-state').classList.remove('hidden');
+          return;
+        }
+
+        currentData = data.data;
+        currentColumns = data.columns;
+
+        document.getElementById('results-canvas').classList.remove('hidden');
+        document.getElementById('insight-text').innerText = data.insight;
+        document.getElementById('sql-display').innerText = data.sql;
+        
+        // Plan & Cost Pill
+        const planCostText = data.plan_cost ? `⚡ Plan: ${data.scan_type} (Cost: ${data.plan_cost})` : `⚡ ${data.scan_type || 'Executed'}`;
+        document.getElementById('plan-pill').innerText = planCostText;
+        document.getElementById('meta-pill').innerText = `📦 ${data.row_count} rows in ${data.execution_time_sec}s (${data.database})`;
+
+        renderTable(data.columns, data.data);
+        renderChart(data.columns, data.data, selectedChartType);
+        updateHistory(question, data.sql, data.database);
+
+        document.getElementById('results-canvas').scrollIntoView({ behavior: 'smooth' });
+
+      } catch (err) {
+        document.getElementById('loading-state').classList.add('hidden');
+        document.getElementById('error-message').innerText = err.message;
+        document.getElementById('error-state').classList.remove('hidden');
+      }
+    }
+
+    function renderTable(columns, rows) {
+      const thead = document.getElementById('table-head');
+      const tbody = document.getElementById('table-body');
+      
+      thead.innerHTML = `<tr>${columns.map(c => `<th class="px-4 py-2.5 font-semibold">${c}</th>`).join('')}</tr>`;
+      
+      tbody.innerHTML = rows.map((r, idx) => `
+        <tr class="${idx % 2 === 0 ? 'bg-slate-900/40' : 'bg-transparent'} hover:bg-slate-800/40 transition-colors">
+          ${columns.map(c => `<td class="px-4 py-2">${r[c] !== null ? r[c] : '<span class="text-slate-600">NULL</span>'}</td>`).join('')}
+        </tr>
+      `).join('');
+    }
+
+    function renderChart(columns, rows, type = 'bar') {
+      const ctx = document.getElementById('analytics-chart').getContext('2d');
+      const noChartMsg = document.getElementById('no-chart-msg');
+
+      if (currentChart) currentChart.destroy();
+
+      if (!rows || rows.length === 0 || columns.length < 2) {
+        noChartMsg.classList.remove('hidden');
+        return;
+      }
+
+      const sample = rows[0];
+      const numericCol = columns.find(c => typeof sample[c] === 'number');
+      const labelCol = columns.find(c => c !== numericCol);
+
+      if (!numericCol || !labelCol) {
+        noChartMsg.classList.remove('hidden');
+        return;
+      }
+
+      noChartMsg.classList.add('hidden');
+
+      const labels = rows.slice(0, 15).map(r => String(r[labelCol]));
+      const values = rows.slice(0, 15).map(r => r[numericCol]);
+
+      const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#06b6d4'];
+
+      currentChart = new Chart(ctx, {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: numericCol.replace('_', ' ').toUpperCase(),
+            data: values,
+            backgroundColor: type === 'doughnut' ? colors : 'rgba(99, 102, 241, 0.8)',
+            borderColor: type === 'doughnut' ? '#0f172a' : '#6366f1',
+            borderWidth: 1.5,
+            borderRadius: type === 'bar' ? 6 : 0,
+            fill: type === 'line' ? { target: 'origin', above: 'rgba(99, 102, 241, 0.15)' } : false,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { 
+              display: type === 'doughnut',
+              labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            }
+          },
+          scales: type === 'doughnut' ? {} : {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { display: false } },
+            y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } }
+          }
+        }
+      });
+    }
+
+    function changeChartType(type) {
+      selectedChartType = type;
+      if (currentColumns && currentData) {
+        renderChart(currentColumns, currentData, type);
+      }
+    }
+
+    function switchTab(type) {
+      const chartTab = document.getElementById('chart-tab');
+      const tableTab = document.getElementById('table-tab');
+      const chartBtn = document.getElementById('tab-chart-btn');
+      const tableBtn = document.getElementById('tab-table-btn');
+
+      if (type === 'chart') {
+        chartTab.classList.remove('hidden');
+        tableTab.classList.add('hidden');
+        chartBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white flex items-center gap-1.5 transition-all";
+        tableBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5 transition-all";
+      } else {
+        chartTab.classList.add('hidden');
+        tableTab.classList.remove('hidden');
+        tableBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white flex items-center gap-1.5 transition-all";
+        chartBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5 transition-all";
+      }
+    }
+
+    function updateHistory(question, sql, db) {
+      const container = document.getElementById('history-list');
+      const div = document.createElement('div');
+      div.className = "p-2 rounded bg-slate-900 border border-slate-800 text-xs cursor-pointer hover:border-indigo-500/50 transition-colors";
+      div.innerHTML = `
+        <div class="flex items-center justify-between mb-0.5">
+          <span class="text-slate-200 font-medium truncate">${question}</span>
+          <span class="text-[9px] font-mono text-indigo-400 bg-indigo-950 px-1 rounded">${db}</span>
+        </div>
+        <span class="text-emerald-400 font-mono text-[10px] block truncate">${sql}</span>
+      `;
+      div.onclick = () => {
+        document.getElementById('query-input').value = question;
+        executeAnalysis();
+      };
+      container.prepend(div);
+    }
+
+    function copySQL() {
+      const sql = document.getElementById('sql-display').innerText;
+      navigator.clipboard.writeText(sql);
+      alert("SQL Query copied to clipboard!");
+    }
+
+    function downloadCSV() {
+      if (!currentData || currentData.length === 0) return;
+      const headers = currentColumns.join(',');
+      const rows = currentData.map(r => currentColumns.map(c => `"${r[c] !== null ? r[c] : ''}"`).join(','));
+      const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `querypulse_${currentActiveDB}_export_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    window.onload = loadDatabases;
+  </script>
+</body>
+</html>
