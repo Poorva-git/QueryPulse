@@ -1,8 +1,6 @@
 # ⚡ QueryPulse — Intelligent Conversational Data Engine for PostgreSQL
 
-<p align="center">
-  <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80" alt="QueryPulse Banner" width="100%" style="border-radius: 12px; max-height: 380px; object-fit: cover; border: 1px solid #1e293b;" />
-</p>
+
 
 <p align="center">
   <strong>Transform plain English & Hinglish questions into secure, production-grade PostgreSQL analytics, dynamic visual charts, and executive AI insights.</strong>
