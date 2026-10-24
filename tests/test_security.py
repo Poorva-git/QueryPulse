@@ -1,8 +1,12 @@
 """
 tests/test_security.py - Adversarial security validation test suite
-Run: pytest tests/test_security.py
+Run: pytest tests/test_security.py -v
 """
 import pytest
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from sql_validator import validate_and_sanitize_sql
 
 

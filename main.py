@@ -99,8 +99,8 @@ def connect_custom_db(req: CustomDbRequest):
         cache_key = f"custom_{req.session_id}"
         _, metadata = get_schema_for_engine(cache_key, eng)
         return {
-            "status": "success", 
-            "message": "Custom PostgreSQL connected successfully!", 
+            "status": "success",
+            "message": "Custom PostgreSQL connected successfully!",
             "tables": metadata,
             "table_count": len(metadata)
         }

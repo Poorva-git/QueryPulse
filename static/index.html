@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="dark scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QueryPulse — Intelligent Conversational Data Engine</title>
-  
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -22,12 +21,22 @@
             mono: ['"JetBrains Mono"', 'monospace'],
           },
           animation: {
-            'gradient-x': 'gradient-x 6s ease infinite',
+            'gradient-x': 'gradient-x 8s ease infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'fade-up': 'fadeUp 0.6s ease forwards',
           },
           keyframes: {
             'gradient-x': {
               '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
               '50%': { 'background-size': '200% 200%', 'background-position': 'right center' },
+            },
+            'float': {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-12px)' },
+            },
+            'fadeUp': {
+              '0%': { opacity: '0', transform: 'translateY(24px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
             }
           }
         }
@@ -36,271 +45,723 @@
   </script>
 
   <style>
-    body { background-color: #07090e; color: #f8fafc; }
-    .glass-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); }
-    .glass-card:hover { border-color: rgba(99, 102, 241, 0.4); }
-    .hero-glow {
-      background: radial-gradient(circle at 50% 15%, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.06) 35%, transparent 70%);
-    }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    * { box-sizing: border-box; }
+    html, body { background-color: #060810; color: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
+
+    /* Glass */
+    .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.07); }
+    .glass-strong { background: rgba(10, 14, 28, 0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.08); }
+
+    /* Grid background */
+    .grid-bg {
+      background-image: linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* Hero gradient glow */
+    .hero-glow {
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.08) 50%, transparent 80%);
+    }
+
+    /* Feature card hover */
+    .feat-card { transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
+    .feat-card:hover { transform: translateY(-6px); border-color: rgba(99,102,241,0.5) !important; box-shadow: 0 20px 60px rgba(99,102,241,0.12); }
+
+    /* Gradient text */
+    .grad-text {
+      background: linear-gradient(135deg, #818cf8 0%, #a78bfa 40%, #f472b6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Tag pill */
+    .tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+
+    /* Step connector line */
+    .step-line { position: absolute; top: 28px; left: calc(50% + 40px); width: calc(100% - 80px); height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.4), rgba(139,92,246,0.15)); }
+
+    /* Query textarea */
+    .query-area:focus { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.25), inset 0 0 0 1px #6366f1; border-color: #6366f1; }
+
+    /* Fade in on scroll */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 
-<body class="flex flex-row h-screen w-screen overflow-hidden bg-[#07090e] text-slate-100">
+<body class="overflow-x-hidden">
 
-  <!-- ==================== LEFT SIDEBAR ==================== -->
-  <aside class="w-80 min-w-[320px] max-w-[320px] h-screen flex flex-col justify-between border-r border-slate-800/80 bg-[#0a0e17] p-5 overflow-hidden flex-shrink-0 z-20">
-    
-    <div class="flex flex-col h-full overflow-hidden">
-      
-      <!-- Brand Logo -->
-      <div class="flex items-center space-x-3 mb-5">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20">
-          <i data-lucide="zap" class="w-5 h-5 text-white"></i>
+  <!-- ============================================================
+       STICKY TOP NAVBAR
+  ============================================================ -->
+  <nav class="fixed top-0 left-0 right-0 z-50 h-16 glass-strong border-b border-slate-800/60 flex items-center px-8 justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/15">
+        <i data-lucide="zap" class="w-4.5 h-4.5 text-white"></i>
+      </div>
+      <div>
+        <span class="text-sm font-extrabold text-white tracking-tight">QueryPulse</span>
+        <span class="ml-2 text-[9px] font-bold uppercase bg-gradient-to-r from-indigo-500 to-violet-500 text-white px-2 py-0.5 rounded-full">Enterprise</span>
+      </div>
+    </div>
+
+    <!-- Nav links -->
+    <div class="hidden md:flex items-center gap-6">
+      <a href="#features" class="text-xs font-semibold text-slate-400 hover:text-white transition-colors">Features</a>
+      <a href="#how-it-works" class="text-xs font-semibold text-slate-400 hover:text-white transition-colors">How It Works</a>
+      <a href="#architecture" class="text-xs font-semibold text-slate-400 hover:text-white transition-colors">Architecture</a>
+      <a href="#query-canvas" class="text-xs font-semibold text-slate-400 hover:text-white transition-colors">Try It</a>
+    </div>
+
+    <!-- Status badges -->
+    <div class="flex items-center gap-2">
+      <span class="tag bg-emerald-950/70 border border-emerald-700/40 text-emerald-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> AST Guard Active
+      </span>
+      <span class="tag bg-indigo-950/70 border border-indigo-700/40 text-indigo-300">
+        <i data-lucide="cpu" class="w-3 h-3"></i> Groq LPU
+      </span>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       HERO SECTION
+  ============================================================ -->
+  <section class="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-16 grid-bg hero-glow overflow-hidden">
+
+    <!-- Floating blur orbs -->
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/8 rounded-full blur-3xl pointer-events-none animate-float"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-violet-600/8 rounded-full blur-3xl pointer-events-none animate-float" style="animation-delay: -3s;"></div>
+
+    <div class="relative z-10 max-w-4xl mx-auto space-y-7">
+
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 tag bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 backdrop-blur">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i>
+        Natural Language &rarr; SQL &rarr; Visual Insights &rarr; AI Analysis
+      </div>
+
+      <!-- Main title -->
+      <h1 class="text-6xl md:text-8xl font-black tracking-tighter leading-none">
+        <span class="grad-text animate-gradient-x">QueryPulse</span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="text-xl md:text-2xl font-semibold text-slate-200 tracking-wide max-w-2xl mx-auto">
+        Intelligent Conversational Data Engine for PostgreSQL
+      </p>
+
+      <!-- Description -->
+      <p class="text-sm md:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+        Ask any business question in <strong class="text-slate-200">plain English or Hinglish</strong> —
+        QueryPulse generates verified SQL, enforces zero-trust AST security, executes safely,
+        and renders real-time visual charts with AI-powered executive insights.
+      </p>
+
+      <!-- Feature pills row -->
+      <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <div class="flex items-center gap-2 px-4 py-2 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> Zero-Trust AST Guard
         </div>
-        <div>
-          <h1 class="text-base font-extrabold text-white flex items-center gap-1.5 tracking-tight">
-            QueryPulse
-            <span class="text-[9px] font-bold uppercase bg-gradient-to-r from-indigo-500 to-violet-500 text-white px-2 py-0.5 rounded-full shadow-sm">Enterprise</span>
-          </h1>
-          <p class="text-[11px] text-slate-400">PostgreSQL BI Engine</p>
+        <div class="flex items-center gap-2 px-4 py-2 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
+          <i data-lucide="plug" class="w-3.5 h-3.5 text-indigo-400"></i> BYODB — Connect Any Postgres
+        </div>
+        <div class="flex items-center gap-2 px-4 py-2 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
+          <i data-lucide="gauge" class="w-3.5 h-3.5 text-amber-400"></i> EXPLAIN Cost Analyzer
+        </div>
+        <div class="flex items-center gap-2 px-4 py-2 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
+          <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-violet-400"></i> Auto Chart Visualizer
+        </div>
+        <div class="flex items-center gap-2 px-4 py-2 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
+          <i data-lucide="brain-circuit" class="w-3.5 h-3.5 text-pink-400"></i> Groq LPU + GPT-o-120B
         </div>
       </div>
 
-      <!-- ACTIVE DATABASE CONTROLS (BYODB) -->
-      <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-800 mb-5 shadow-inner space-y-2.5">
-        
-        <div class="flex items-center justify-between">
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <i data-lucide="database" class="w-3 h-3 text-indigo-400"></i> Active Database
-          </label>
-          <span id="custom-db-tag" class="hidden text-[9px] font-mono text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-800/50">Custom DB</span>
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+        <a href="#query-canvas"
+          class="px-8 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-600/30 flex items-center gap-2.5 transition-all transform hover:scale-105 active:scale-95">
+          <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+          Try QueryPulse Live
+        </a>
+        <a href="https://github.com/Poorva-git/QueryPulse" target="_blank"
+          class="px-7 py-3.5 glass border border-slate-700 hover:border-indigo-500/50 text-slate-200 rounded-2xl text-sm font-bold flex items-center gap-2.5 transition-all hover:text-white">
+          <i data-lucide="github" class="w-4 h-4"></i>
+          View on GitHub
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-float">
+      <span class="text-[11px] text-slate-500 font-medium tracking-widest uppercase">Scroll to explore</span>
+      <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500"></i>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       STATS BAR
+  ============================================================ -->
+  <section class="py-10 border-y border-slate-800/60 bg-[#08091200]">
+    <div class="max-w-5xl mx-auto px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center reveal">
+      <div class="space-y-1.5">
+        <div class="text-3xl font-black grad-text">15+</div>
+        <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Tables Auto-Analyzed</div>
+      </div>
+      <div class="space-y-1.5">
+        <div class="text-3xl font-black grad-text">&lt;2s</div>
+        <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Avg Query Execution</div>
+      </div>
+      <div class="space-y-1.5">
+        <div class="text-3xl font-black grad-text">8+</div>
+        <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Security Attack Vectors Blocked</div>
+      </div>
+      <div class="space-y-1.5">
+        <div class="text-3xl font-black grad-text">100%</div>
+        <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Zero SQL Injection Risk</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FEATURES SECTION
+  ============================================================ -->
+  <section id="features" class="py-28 px-8">
+    <div class="max-w-6xl mx-auto">
+
+      <!-- Header -->
+      <div class="text-center mb-20 reveal">
+        <div class="tag bg-violet-950/60 border border-violet-500/30 text-violet-300 mb-5 inline-flex">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i> Core Capabilities
         </div>
-        
-        <select id="db-selector" onchange="onDatabaseChange(this.value)" 
-          class="w-full bg-slate-950 border border-slate-700/80 text-xs font-semibold text-indigo-300 rounded-lg px-2.5 py-2 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-          <option value="dvdrental">🎬 dvdrental (Sandbox Demo)</option>
-          <option value="onlinebookstore">📚 onlinebookstore (Sandbox Demo)</option>
-        </select>
-
-        <!-- Connect Custom DB Button -->
-        <button onclick="openCustomDbModal()" 
-          class="w-full py-2 px-3 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center justify-center gap-2 transition-all">
-          <i data-lucide="plug" class="w-3.5 h-3.5"></i>
-          <span>Connect Your Own DB</span>
-        </button>
-
-        <button id="disconnect-btn" onclick="disconnectCustomDb()" 
-          class="hidden w-full py-1.5 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all">
-          <i data-lucide="power" class="w-3 h-3"></i>
-          <span>Disconnect & Revert to Demo</span>
-        </button>
-
+        <h2 class="text-4xl md:text-5xl font-black tracking-tight text-white mb-5">
+          Everything a Data Engineer<br>Wishes They Had
+        </h2>
+        <p class="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
+          QueryPulse combines LLM intelligence, PostgreSQL internals, and enterprise security into a single seamless tool.
+        </p>
       </div>
 
-      <!-- Schema Explorer Header -->
-      <div class="flex items-center justify-between mb-2 px-1">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-          <i data-lucide="layers" class="w-3.5 h-3.5 text-indigo-400"></i> Relational Tables
-        </span>
-        <span id="table-count" class="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md font-semibold">--</span>
-      </div>
+      <!-- Feature cards grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      <!-- Tables List -->
-      <div id="table-list" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
-        <div class="text-slate-500 p-4 text-center animate-pulse">Loading database metadata...</div>
-      </div>
-
-      <!-- History Footer -->
-      <div class="mt-4 pt-4 border-t border-slate-800/80">
-        <div class="flex items-center justify-between mb-2 px-1">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <i data-lucide="history" class="w-3.5 h-3.5 text-slate-400"></i> Recent Queries
-          </span>
+        <!-- Card 1 -->
+        <div class="feat-card glass border border-slate-800 rounded-3xl p-7 space-y-5 reveal">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center">
+            <i data-lucide="message-square-code" class="w-6 h-6 text-indigo-400"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white mb-2">Natural Language to SQL</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Ask questions in plain English or Hinglish. Powered by Groq's ultra-fast LPU and GPT-o-120B model — generates syntactically perfect, schema-aware PostgreSQL queries every time.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="tag bg-indigo-950/50 border border-indigo-800/50 text-indigo-400 text-[10px]">Groq LPU</span>
+            <span class="tag bg-indigo-950/50 border border-indigo-800/50 text-indigo-400 text-[10px]">GPT-o-120B</span>
+            <span class="tag bg-indigo-950/50 border border-indigo-800/50 text-indigo-400 text-[10px]">Schema-Aware</span>
+          </div>
         </div>
-        <div id="history-list" class="max-h-36 overflow-y-auto space-y-1.5 text-xs pr-1">
-          <p class="text-slate-500 italic text-[11px] px-1">No previous queries run yet.</p>
+
+        <!-- Card 2 -->
+        <div class="feat-card glass border border-slate-800 rounded-3xl p-7 space-y-5 reveal">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
+            <i data-lucide="shield-check" class="w-6 h-6 text-emerald-400"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white mb-2">Zero-Trust AST Security</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Every generated SQL is parsed into an Abstract Syntax Tree using <code class="text-emerald-400 font-mono bg-slate-900 px-1.5 py-0.5 rounded text-xs">sqlglot</code>. DELETE, DROP, UPDATE, pg_sleep, file reads — all blocked before execution. No regex, no guessing.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="tag bg-emerald-950/50 border border-emerald-800/50 text-emerald-400 text-[10px]">AST Parsing</span>
+            <span class="tag bg-emerald-950/50 border border-emerald-800/50 text-emerald-400 text-[10px]">SQLGlot</span>
+            <span class="tag bg-emerald-950/50 border border-emerald-800/50 text-emerald-400 text-[10px]">8 Attack Vectors</span>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="feat-card glass border border-slate-800 rounded-3xl p-7 space-y-5 reveal">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+            <i data-lucide="gauge" class="w-6 h-6 text-amber-400"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white mb-2">PostgreSQL EXPLAIN Analyzer</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Runs <code class="text-amber-400 font-mono bg-slate-900 px-1.5 py-0.5 rounded text-xs">EXPLAIN (FORMAT JSON)</code> on every query. Extracts Node Type (Index Scan, Hash Join) and Total Cost — displayed live in the UI. Interviewers love this.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="tag bg-amber-950/50 border border-amber-800/50 text-amber-400 text-[10px]">Query Plan</span>
+            <span class="tag bg-amber-950/50 border border-amber-800/50 text-amber-400 text-[10px]">Cost Estimation</span>
+            <span class="tag bg-amber-950/50 border border-amber-800/50 text-amber-400 text-[10px]">Node Type</span>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="feat-card glass border border-slate-800 rounded-3xl p-7 space-y-5 reveal">
+          <div class="w-12 h-12 rounded-2xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center">
+            <i data-lucide="bar-chart-3" class="w-6 h-6 text-violet-400"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white mb-2">Auto Chart Visualizer</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Query results are auto-detected and rendered as interactive Bar, Line, or Doughnut charts using Chart.js. Switch between chart types live, export raw data as CSV — no extra config.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="tag bg-violet-950/50 border border-violet-800/50 text-violet-400 text-[10px]">Chart.js</span>
+            <span class="tag bg-violet-950/50 border border-violet-800/50 text-violet-400 text-[10px]">Bar / Line / Doughnut</span>
+            <span class="tag bg-violet-950/50 border border-violet-800/50 text-violet-400 text-[10px]">CSV Export</span>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="feat-card glass border border-slate-800 rounded-3xl p-7 space-y-5 reveal">
+          <div class="w-12 h-12 rounded-2xl bg-pink-500/15 border border-pink-500/25 flex items-center justify-center">
+            <i data-lucide="plug" class="w-6 h-6 text-pink-400"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white mb-2">BYODB — Bring Your Own Database</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Recruiters and users can connect their own Supabase, Neon.tech, AWS RDS, or local PostgreSQL database via connection URI — isolated per browser session, never stored.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="tag bg-pink-950/50 border border-pink-800/50 text-pink-400 text-[10px]">Session-Isolated</span>
+            <span class="tag bg-pink-950/50 border border-pink-800/50 text-pink-400 text-[10px]">Supabase / Neon</span>
+            <span class="tag bg-pink-950/50 border border-pink-800/50 text-pink-400 text-[10px]">AWS RDS</span>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="feat-card glass border border-slate-800 rounded-3xl p-7 space-y-5 reveal">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center">
+            <i data-lucide="lightbulb" class="w-6 h-6 text-cyan-400"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white mb-2">AI Executive Insights</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              After every query, Groq LLM generates a 2-sentence business insight summarizing what the data means — in plain English. Turn raw rows into executive-ready analysis, instantly.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="tag bg-cyan-950/50 border border-cyan-800/50 text-cyan-400 text-[10px]">AI-Powered</span>
+            <span class="tag bg-cyan-950/50 border border-cyan-800/50 text-cyan-400 text-[10px]">Business Context</span>
+            <span class="tag bg-cyan-950/50 border border-cyan-800/50 text-cyan-400 text-[10px]">Groq Fast Inference</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       HOW IT WORKS SECTION
+  ============================================================ -->
+  <section id="how-it-works" class="py-28 px-8 bg-slate-900/20 border-y border-slate-800/40">
+    <div class="max-w-5xl mx-auto">
+
+      <div class="text-center mb-20 reveal">
+        <div class="tag bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 mb-5 inline-flex">
+          <i data-lucide="workflow" class="w-3.5 h-3.5"></i> Request Pipeline
+        </div>
+        <h2 class="text-4xl md:text-5xl font-black tracking-tight text-white mb-5">
+          From Question to Insight<br>in Under 2 Seconds
+        </h2>
+        <p class="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
+          Every request passes through a 5-stage pipeline — LLM generation, AST security, query execution, visualization, and AI analysis.
+        </p>
+      </div>
+
+      <!-- Steps -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 reveal">
+
+        <div class="flex flex-col items-center text-center p-5 glass border border-slate-800 rounded-2xl space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+            <i data-lucide="message-circle" class="w-5 h-5 text-indigo-400"></i>
+          </div>
+          <div class="text-[10px] font-black uppercase tracking-widest text-indigo-400">Step 1</div>
+          <div class="text-sm font-bold text-white">NL Question</div>
+          <div class="text-[11px] text-slate-500">You type in English or Hinglish</div>
+        </div>
+
+        <div class="hidden md:flex items-center justify-center text-slate-700">
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </div>
+
+        <div class="flex flex-col items-center text-center p-5 glass border border-slate-800 rounded-2xl space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+            <i data-lucide="shield" class="w-5 h-5 text-emerald-400"></i>
+          </div>
+          <div class="text-[10px] font-black uppercase tracking-widest text-emerald-400">Step 2 & 3</div>
+          <div class="text-sm font-bold text-white">LLM + AST Guard</div>
+          <div class="text-[11px] text-slate-500">Generate SQL → Validate syntax tree</div>
+        </div>
+
+        <div class="hidden md:flex items-center justify-center text-slate-700">
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </div>
+
+        <div class="flex flex-col items-center text-center p-5 glass border border-slate-800 rounded-2xl space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-5 h-5 text-violet-400"></i>
+          </div>
+          <div class="text-[10px] font-black uppercase tracking-widest text-violet-400">Step 4 & 5</div>
+          <div class="text-sm font-bold text-white">Execute + Visualize</div>
+          <div class="text-[11px] text-slate-500">Run query → Chart + AI insight</div>
+        </div>
+
+      </div>
+
+      <!-- Security detail row -->
+      <div class="mt-10 p-6 glass border border-emerald-500/20 rounded-2xl reveal">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center flex-shrink-0 mt-1">
+            <i data-lucide="lock" class="w-5 h-5 text-emerald-400"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white mb-1.5">AST Security Layer — What Gets Blocked?</h4>
+            <div class="flex flex-wrap gap-2 mt-2">
+              <span class="tag bg-rose-950/50 border border-rose-800/40 text-rose-400 text-[10px]">❌ DROP TABLE</span>
+              <span class="tag bg-rose-950/50 border border-rose-800/40 text-rose-400 text-[10px]">❌ DELETE / UPDATE</span>
+              <span class="tag bg-rose-950/50 border border-rose-800/40 text-rose-400 text-[10px]">❌ Multiple Statements</span>
+              <span class="tag bg-rose-950/50 border border-rose-800/40 text-rose-400 text-[10px]">❌ pg_sleep DoS</span>
+              <span class="tag bg-rose-950/50 border border-rose-800/40 text-rose-400 text-[10px]">❌ pg_read_file</span>
+              <span class="tag bg-rose-950/50 border border-rose-800/40 text-rose-400 text-[10px]">❌ LIMIT &gt; 1000 rows</span>
+            </div>
+          </div>
         </div>
       </div>
 
     </div>
-  </aside>
+  </section>
 
-  <!-- ==================== MAIN SCROLLABLE CANVAS ==================== -->
-  <main class="flex-1 min-w-0 h-screen overflow-y-auto flex flex-col hero-glow">
+  <!-- ============================================================
+       ARCHITECTURE SECTION
+  ============================================================ -->
+  <section id="architecture" class="py-28 px-8">
+    <div class="max-w-6xl mx-auto">
 
-    <!-- Top Sticky Bar -->
-    <header class="h-14 border-b border-slate-800/70 px-8 flex items-center justify-between bg-[#0a0e17]/80 backdrop-blur sticky top-0 z-30 flex-shrink-0">
-      <div class="flex items-center space-x-2.5">
-        <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Connected: <span id="header-db-name" class="text-indigo-400 font-mono">dvdrental</span></span>
-      </div>
-      <div class="flex items-center space-x-3">
-        <span class="text-xs px-3 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-slate-300 flex items-center gap-1.5 shadow-sm">
-          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> AST Guard Active
-        </span>
-        <span class="text-xs px-3 py-1 rounded-full bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 flex items-center gap-1.5 font-medium">
-          <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Groq LPU Powered
-        </span>
-      </div>
-    </header>
-
-    <div class="p-8 max-w-6xl mx-auto w-full space-y-10 pb-20">
-
-      <!-- ==================== GRAND HERO SECTION ==================== -->
-      <section class="text-center pt-4 pb-2 space-y-4">
-        
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold shadow-sm backdrop-blur">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i>
-          <span>Zero-Trust Natural Language PostgreSQL Engine</span>
+      <div class="text-center mb-20 reveal">
+        <div class="tag bg-amber-950/60 border border-amber-500/30 text-amber-300 mb-5 inline-flex">
+          <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Tech Stack
         </div>
-
-        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight">
-          <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 animate-gradient-x">
-            QueryPulse
-          </span>
-        </h1>
-
-        <p class="text-lg md:text-xl font-semibold text-slate-200 max-w-2xl mx-auto tracking-wide">
-          Intelligent Conversational Data Engine for PostgreSQL
+        <h2 class="text-4xl md:text-5xl font-black tracking-tight text-white mb-5">
+          Built with Production-Grade Tools
+        </h2>
+        <p class="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
+          Clean separation of concerns — every layer has a single responsibility and is independently testable.
         </p>
+      </div>
 
-        <p class="text-xs md:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          Ask questions in plain <strong class="text-slate-200">English or Hinglish</strong> across any connected PostgreSQL database. QueryPulse generates verified queries, enforces AST security, and renders instant visual charts.
-        </p>
+      <!-- Architecture cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
 
-        <!-- Feature Pills -->
-        <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs font-medium">
-            <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-400"></i> Zero-Trust AST Guard
+        <!-- Backend -->
+        <div class="glass border border-slate-800 rounded-3xl p-8 space-y-6">
+          <div class="flex items-center gap-3 pb-4 border-b border-slate-800">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center">
+              <i data-lucide="server" class="w-5 h-5 text-indigo-400"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black uppercase tracking-widest text-indigo-400">Backend Layer</div>
+              <div class="text-base font-bold text-white">Python + FastAPI</div>
+            </div>
           </div>
-          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs font-medium">
-            <i data-lucide="plug" class="w-3.5 h-3.5 text-indigo-400"></i> BYODB (Connect Any Postgres)
-          </div>
-          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs font-medium">
-            <i data-lucide="gauge" class="w-3.5 h-3.5 text-amber-400"></i> EXPLAIN Cost Analyzer
-          </div>
-          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs font-medium">
-            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-purple-400"></i> Auto Chart Visualizer
+          <div class="space-y-3 text-sm">
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="layers" class="w-3.5 h-3.5 text-indigo-400"></i></span>
+              <div><span class="text-white font-semibold">FastAPI</span> <span class="text-slate-400">— Async REST API with automatic OpenAPI docs</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="database" class="w-3.5 h-3.5 text-indigo-400"></i></span>
+              <div><span class="text-white font-semibold">SQLAlchemy</span> <span class="text-slate-400">— Multi-engine connection pooling with BYODB isolation</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="shield" class="w-3.5 h-3.5 text-indigo-400"></i></span>
+              <div><span class="text-white font-semibold">SQLGlot</span> <span class="text-slate-400">— AST-level SQL parsing and security validation</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="zap" class="w-3.5 h-3.5 text-indigo-400"></i></span>
+              <div><span class="text-white font-semibold">Groq API</span> <span class="text-slate-400">— LPU-accelerated LLM inference (temperature=0 for determinism)</span></div>
+            </div>
           </div>
         </div>
 
-      </section>
+        <!-- Frontend -->
+        <div class="glass border border-slate-800 rounded-3xl p-8 space-y-6">
+          <div class="flex items-center gap-3 pb-4 border-b border-slate-800">
+            <div class="w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/20 flex items-center justify-center">
+              <i data-lucide="monitor" class="w-5 h-5 text-violet-400"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black uppercase tracking-widest text-violet-400">Frontend Layer</div>
+              <div class="text-base font-bold text-white">Vanilla JS + Tailwind</div>
+            </div>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-violet-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-violet-400"></i></span>
+              <div><span class="text-white font-semibold">Chart.js</span> <span class="text-slate-400">— Interactive Bar, Line, Doughnut chart rendering</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-violet-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="wind" class="w-3.5 h-3.5 text-violet-400"></i></span>
+              <div><span class="text-white font-semibold">Tailwind CSS</span> <span class="text-slate-400">— Utility-first responsive dark UI, CDN-loaded</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-violet-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="session" class="w-3.5 h-3.5 text-violet-400"></i></span>
+              <div><span class="text-white font-semibold">sessionStorage</span> <span class="text-slate-400">— BYODB session isolation per browser tab</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-violet-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="download" class="w-3.5 h-3.5 text-violet-400"></i></span>
+              <div><span class="text-white font-semibold">CSV Export</span> <span class="text-slate-400">— One-click data download from any query result</span></div>
+            </div>
+          </div>
+        </div>
 
-      <!-- ==================== QUERY INPUT HERO BOX ==================== -->
-      <section class="glass-card p-6 rounded-3xl shadow-2xl relative overflow-hidden transition-all">
-        
-        <div class="flex items-center justify-between mb-3">
+        <!-- Database -->
+        <div class="glass border border-slate-800 rounded-3xl p-8 space-y-6">
+          <div class="flex items-center gap-3 pb-4 border-b border-slate-800">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
+              <i data-lucide="database" class="w-5 h-5 text-emerald-400"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black uppercase tracking-widest text-emerald-400">Database Layer</div>
+              <div class="text-base font-bold text-white">PostgreSQL 18</div>
+            </div>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="film" class="w-3.5 h-3.5 text-emerald-400"></i></span>
+              <div><span class="text-white font-semibold">dvdrental</span> <span class="text-slate-400">— 15-table movie rental dataset (default sandbox)</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="book" class="w-3.5 h-3.5 text-emerald-400"></i></span>
+              <div><span class="text-white font-semibold">onlinebookstore</span> <span class="text-slate-400">— E-commerce book database (bonus sandbox)</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="timer" class="w-3.5 h-3.5 text-emerald-400"></i></span>
+              <div><span class="text-white font-semibold">statement_timeout</span> <span class="text-slate-400">— 5-second hard limit prevents runaway queries</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="search" class="w-3.5 h-3.5 text-emerald-400"></i></span>
+              <div><span class="text-white font-semibold">EXPLAIN (FORMAT JSON)</span> <span class="text-slate-400">— Query plan cost extracted for every query</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DevOps -->
+        <div class="glass border border-slate-800 rounded-3xl p-8 space-y-6">
+          <div class="flex items-center gap-3 pb-4 border-b border-slate-800">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/20 flex items-center justify-center">
+              <i data-lucide="container" class="w-5 h-5 text-cyan-400"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black uppercase tracking-widest text-cyan-400">DevOps / Testing</div>
+              <div class="text-base font-bold text-white">Docker + Pytest</div>
+            </div>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-cyan-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="box" class="w-3.5 h-3.5 text-cyan-400"></i></span>
+              <div><span class="text-white font-semibold">Dockerfile</span> <span class="text-slate-400">— Python 3.11-slim, production-ready image</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-cyan-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i></span>
+              <div><span class="text-white font-semibold">docker-compose</span> <span class="text-slate-400">— Single command deploy with env var injection</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-cyan-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="test-tube" class="w-3.5 h-3.5 text-cyan-400"></i></span>
+              <div><span class="text-white font-semibold">Pytest Suite</span> <span class="text-slate-400">— 8 adversarial injection tests, all passing</span></div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-lg bg-cyan-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><i data-lucide="github" class="w-3.5 h-3.5 text-cyan-400"></i></span>
+              <div><span class="text-white font-semibold">GitHub</span> <span class="text-slate-400">— Full source on github.com/Poorva-git/QueryPulse</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       QUERY CANVAS — THE ACTUAL TOOL
+  ============================================================ -->
+  <section id="query-canvas" class="py-28 px-8 bg-slate-900/20 border-t border-slate-800/40">
+    <div class="max-w-5xl mx-auto">
+
+      <!-- Section header -->
+      <div class="text-center mb-16 reveal">
+        <div class="tag bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 mb-5 inline-flex">
+          <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> Live Demo
+        </div>
+        <h2 class="text-4xl md:text-5xl font-black tracking-tight text-white mb-5">
+          Ask Your Database Anything
+        </h2>
+        <p class="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
+          Select a database, type your question, hit Enter. Results appear below with charts and AI insights.
+        </p>
+      </div>
+
+      <!-- DB Controls Bar -->
+      <div class="glass border border-slate-800 rounded-2xl p-5 mb-6 reveal">
+        <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div class="flex items-center gap-3 flex-wrap">
+            <div class="flex items-center gap-2">
+              <i data-lucide="database" class="w-4 h-4 text-indigo-400"></i>
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Database:</span>
+            </div>
+            <select id="db-selector" onchange="onDatabaseChange(this.value)"
+              class="bg-slate-900 border border-slate-700 text-xs font-semibold text-indigo-300 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 cursor-pointer min-w-[200px]">
+              <option value="dvdrental">🎬 dvdrental (Sandbox Demo)</option>
+              <option value="onlinebookstore">📚 onlinebookstore (Sandbox Demo)</option>
+            </select>
+            <span id="custom-db-tag" class="hidden tag bg-emerald-950 border border-emerald-700/50 text-emerald-400 text-[10px]">
+              <i data-lucide="check-circle" class="w-3 h-3"></i> Custom DB Connected
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openCustomDbModal()"
+              class="px-4 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-bold flex items-center gap-2 transition-all">
+              <i data-lucide="plug" class="w-3.5 h-3.5"></i> Connect Your Own DB
+            </button>
+            <button id="disconnect-btn" onclick="disconnectCustomDb()"
+              class="hidden px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center gap-2 transition-all">
+              <i data-lucide="power" class="w-3.5 h-3.5"></i> Disconnect
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Query Input Box -->
+      <div class="glass border border-slate-800 rounded-3xl p-7 mb-6 reveal space-y-5">
+
+        <div class="flex items-center justify-between">
           <label class="text-sm font-bold text-slate-200 flex items-center gap-2">
             <i data-lucide="message-square-code" class="w-4 h-4 text-indigo-400"></i>
-            Ask a business question on <span id="prompt-db-name" class="text-indigo-400 font-mono">dvdrental</span>:
+            Ask a question about <span id="prompt-db-name" class="text-indigo-400 font-mono mx-1">dvdrental</span>:
           </label>
-          <span class="text-[11px] text-slate-400">Press <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-slate-300">Enter</kbd> to execute</span>
+          <span class="text-[11px] text-slate-500">
+            Press <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono">Enter</kbd> to run
+          </span>
         </div>
 
         <div class="relative">
-          <textarea id="query-input" rows="2" 
-            placeholder="e.g. 'Top 5 most rented films kaunsi hain?' or 'Show me the highest revenue generating customers'"
-            class="w-full bg-slate-950/80 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 font-sans resize-none pr-36 shadow-inner transition-all"></textarea>
-          
+          <textarea id="query-input" rows="3"
+            placeholder="e.g. 'Top 5 most rented films kaunsi hain?' or 'Which customer paid the highest total amount?'"
+            class="query-area w-full bg-slate-950/80 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-600 font-sans resize-none pr-36 transition-all"></textarea>
+
           <button id="run-btn" onclick="executeAnalysis()"
-            class="absolute right-3.5 bottom-4 px-5 py-2.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95">
+            class="absolute right-4 bottom-4 px-5 py-2.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95">
             <i data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>
-            <span>Run Analysis</span>
+            Run Analysis
           </button>
         </div>
 
-        <!-- Sample Prompts -->
-        <div class="mt-4">
-          <span class="text-xs text-slate-400 font-semibold block mb-2">Sample Queries for Active Database (Click to Run):</span>
-          <div id="quick-prompts-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
-          </div>
+        <!-- Sample prompts -->
+        <div>
+          <span class="text-xs text-slate-500 font-semibold block mb-3">
+            Quick Examples — click to run instantly:
+          </span>
+          <div id="quick-prompts-container" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"></div>
         </div>
 
-      </section>
+      </div>
 
-      <!-- ==================== LOADING STATE ==================== -->
-      <div id="loading-state" class="hidden glass-card p-10 rounded-3xl text-center space-y-4 border border-indigo-500/30 shadow-2xl">
+      <!-- Loading state -->
+      <div id="loading-state" class="hidden glass border border-indigo-500/30 p-12 rounded-3xl text-center space-y-5 mb-6">
         <div class="relative inline-flex">
-          <div class="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+          <div class="w-14 h-14 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
           <div class="absolute inset-0 flex items-center justify-center">
-            <i data-lucide="cpu" class="w-5 h-5 text-indigo-400 animate-pulse"></i>
+            <i data-lucide="cpu" class="w-6 h-6 text-indigo-400 animate-pulse"></i>
           </div>
         </div>
         <div>
-          <h3 class="text-base font-bold text-white">Synthesizing Query & Enforcing Safeguards</h3>
-          <p class="text-xs text-slate-400 mt-1">NL to SQL $\rightarrow$ AST Security Check $\rightarrow$ Safe Execution $\rightarrow$ Visuals</p>
+          <h3 class="text-base font-bold text-white">Synthesizing Query</h3>
+          <p class="text-xs text-slate-400 mt-1.5">NL → SQL → AST Security Check → EXPLAIN Plan → Safe Execution → AI Insight</p>
         </div>
       </div>
 
-      <!-- ==================== ERROR STATE ==================== -->
-      <div id="error-state" class="hidden bg-rose-950/40 border border-rose-800 p-5 rounded-2xl text-rose-300 text-xs space-y-2 shadow-xl">
-        <div class="font-bold flex items-center gap-2 text-sm text-rose-300">
-          <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i> Query Execution or Security Policy Rejected
+      <!-- Error state -->
+      <div id="error-state" class="hidden bg-rose-950/40 border border-rose-800/60 p-6 rounded-2xl text-rose-300 space-y-3 mb-6">
+        <div class="font-bold flex items-center gap-2 text-sm">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i>
+          Security Policy Rejected or Execution Error
         </div>
-        <p id="error-message" class="text-rose-200 font-mono bg-rose-950/60 p-3 rounded-lg border border-rose-900/60"></p>
+        <p id="error-message" class="text-rose-200 font-mono text-xs bg-rose-950/60 p-3 rounded-xl border border-rose-900/60"></p>
       </div>
 
       <!-- ==================== RESULTS CANVAS ==================== -->
       <div id="results-canvas" class="hidden space-y-6">
 
-        <!-- Executive AI Insight Card -->
-        <div class="bg-gradient-to-r from-indigo-950/70 via-slate-900 to-violet-950/60 border border-indigo-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-          <div class="flex items-center gap-2.5 mb-2.5">
-            <span class="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              <i data-lucide="lightbulb" class="w-4 h-4"></i>
+        <!-- AI Insight -->
+        <div class="bg-gradient-to-r from-indigo-950/70 via-slate-900/80 to-violet-950/60 border border-indigo-500/30 rounded-2xl p-7 shadow-2xl">
+          <div class="flex items-center gap-2.5 mb-3">
+            <span class="p-2 rounded-xl bg-indigo-500/20 border border-indigo-500/25">
+              <i data-lucide="lightbulb" class="w-4 h-4 text-indigo-400"></i>
             </span>
-            <span class="text-xs font-bold uppercase tracking-wider text-indigo-300">Executive AI Insight</span>
+            <span class="text-xs font-black uppercase tracking-widest text-indigo-300">Executive AI Insight</span>
           </div>
           <p id="insight-text" class="text-base text-slate-100 font-medium leading-relaxed"></p>
         </div>
 
-        <!-- Validated SQL Query Box with EXPLAIN COST -->
-        <div class="glass-card rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
-          <div class="bg-slate-900 px-5 py-3 border-b border-slate-800 flex items-center justify-between">
-            <div class="flex items-center space-x-2.5">
+        <!-- SQL + Cost Pill -->
+        <div class="glass border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div class="bg-slate-900/80 px-6 py-3.5 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2.5">
               <i data-lucide="terminal" class="w-4 h-4 text-indigo-400"></i>
               <span class="text-xs font-bold text-slate-200 uppercase tracking-wide">Validated PostgreSQL Statement</span>
             </div>
-            <div class="flex items-center space-x-2">
-              <span id="plan-pill" class="text-xs font-mono text-indigo-300 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800/60"></span>
-              <span id="meta-pill" class="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50"></span>
-              <button onclick="copySQL()" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1 rounded-md transition-colors">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span id="plan-pill" class="text-xs font-mono text-amber-300 bg-amber-950/60 px-2.5 py-1 rounded-lg border border-amber-800/50"></span>
+              <span id="meta-pill" class="text-xs font-mono text-emerald-400 bg-emerald-950/50 px-2.5 py-1 rounded-lg border border-emerald-800/40"></span>
+              <button onclick="copySQL()" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-1 rounded-lg transition-colors">
                 <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
               </button>
             </div>
           </div>
-          <div class="p-5 bg-slate-950 overflow-x-auto">
-            <pre><code id="sql-display" class="font-mono text-xs text-emerald-300 leading-relaxed"></code></pre>
+          <div class="p-6 bg-slate-950 overflow-x-auto">
+            <pre><code id="sql-display" class="font-mono text-sm text-emerald-300 leading-relaxed"></code></pre>
           </div>
         </div>
 
-        <!-- Interactive Visuals & Data Tabs -->
-        <div class="glass-card rounded-3xl p-6 border border-slate-800 shadow-2xl">
-          
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4 mb-5">
-            
-            <div class="flex space-x-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
-              <button id="tab-chart-btn" onclick="switchTab('chart')" 
+        <!-- Chart + Table Tabs -->
+        <div class="glass border border-slate-800 rounded-3xl p-7 shadow-xl">
+
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7 pb-5 border-b border-slate-800">
+
+            <!-- Tab switcher -->
+            <div class="flex space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800/80">
+              <button id="tab-chart-btn" onclick="switchTab('chart')"
                 class="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white flex items-center gap-2 shadow-sm transition-all">
                 <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Interactive Chart
               </button>
-              <button id="tab-table-btn" onclick="switchTab('table')" 
+              <button id="tab-table-btn" onclick="switchTab('table')"
                 class="px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 transition-all">
                 <i data-lucide="table" class="w-4 h-4"></i> Data Table
               </button>
             </div>
 
-            <div class="flex items-center space-x-2">
+            <!-- Controls -->
+            <div class="flex items-center gap-2 flex-wrap">
               <div id="chart-type-picker" class="flex space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
                 <button onclick="changeChartType('bar')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:text-white rounded hover:bg-slate-800 transition-colors">Bar</button>
                 <button onclick="changeChartType('line')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:text-white rounded hover:bg-slate-800 transition-colors">Line</button>
                 <button onclick="changeChartType('doughnut')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:text-white rounded hover:bg-slate-800 transition-colors">Doughnut</button>
               </div>
-
-              <button onclick="downloadCSV()" 
+              <button onclick="downloadCSV()"
                 class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
               </button>
@@ -308,14 +769,16 @@
 
           </div>
 
-          <!-- Chart Area -->
-          <div id="chart-tab" class="h-84 w-full relative">
-            <canvas id="analytics-chart" style="max-height: 340px;"></canvas>
-            <p id="no-chart-msg" class="hidden text-xs text-slate-500 text-center pt-24 italic">This result structure is best analyzed using the Data Table tab.</p>
+          <!-- Chart -->
+          <div id="chart-tab" class="w-full relative" style="min-height:320px;">
+            <canvas id="analytics-chart" style="max-height: 360px;"></canvas>
+            <p id="no-chart-msg" class="hidden text-xs text-slate-500 text-center pt-32 italic">
+              This result is best viewed in Data Table mode.
+            </p>
           </div>
 
-          <!-- Table Area -->
-          <div id="table-tab" class="hidden max-h-[420px] overflow-y-auto rounded-xl border border-slate-800">
+          <!-- Table -->
+          <div id="table-tab" class="hidden max-h-[440px] overflow-y-auto rounded-2xl border border-slate-800">
             <table class="w-full text-left text-xs text-slate-300">
               <thead id="table-head" class="bg-slate-900 text-slate-400 uppercase tracking-wider text-[11px] sticky top-0 border-b border-slate-800"></thead>
               <tbody id="table-body" class="divide-y divide-slate-800/60 font-mono"></tbody>
@@ -326,38 +789,98 @@
 
       </div>
 
-    </div>
-  </main>
-
-  <!-- ==================== BYODB CONNECT MODAL ==================== -->
-  <div id="custom-db-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="glass-card max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-indigo-500/40 space-y-4">
-      
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div class="flex items-center gap-2 text-white font-bold text-base">
-          <div class="p-2 bg-indigo-600/20 rounded-xl text-indigo-400"><i data-lucide="database" class="w-5 h-5"></i></div>
-          <span>Connect Your PostgreSQL Database</span>
+      <!-- Schema Explorer (below results, collapsible) -->
+      <div class="mt-10 reveal">
+        <button onclick="toggleSchema()" class="flex items-center gap-3 w-full glass border border-slate-800 rounded-2xl px-6 py-4 hover:border-indigo-500/40 transition-all">
+          <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i>
+          <span class="text-sm font-bold text-slate-200">Database Schema Explorer</span>
+          <span id="table-count" class="ml-2 text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md">-- tables</span>
+          <i data-lucide="chevron-down" id="schema-chevron" class="w-4 h-4 text-slate-500 ml-auto transition-transform"></i>
+        </button>
+        <div id="schema-panel" class="hidden mt-3 glass border border-slate-800 rounded-2xl p-5">
+          <div id="table-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            <div class="text-slate-500 p-4 text-center animate-pulse col-span-full">Loading schema metadata...</div>
+          </div>
         </div>
-        <button onclick="closeCustomDbModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
 
-      <p class="text-xs text-slate-300 leading-relaxed">
-        Paste your PostgreSQL connection string. Your credentials are used <strong>only in your active browser session</strong> and are never saved or shared with anyone.
+      <!-- History (also collapsible) -->
+      <div class="mt-4 reveal">
+        <button onclick="toggleHistory()" class="flex items-center gap-3 w-full glass border border-slate-800 rounded-2xl px-6 py-4 hover:border-indigo-500/40 transition-all">
+          <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
+          <span class="text-sm font-bold text-slate-200">Recent Query History</span>
+          <i data-lucide="chevron-down" id="history-chevron" class="w-4 h-4 text-slate-500 ml-auto transition-transform"></i>
+        </button>
+        <div id="history-panel" class="hidden mt-3 glass border border-slate-800 rounded-2xl p-5">
+          <div id="history-list" class="space-y-2">
+            <p class="text-slate-500 italic text-xs px-1">No queries run yet.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="border-t border-slate-800/60 py-12 px-8">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center">
+          <i data-lucide="zap" class="w-4 h-4 text-white"></i>
+        </div>
+        <div>
+          <span class="font-bold text-slate-300">QueryPulse</span> — Final Year B.Tech CSE Placement Portfolio Project
+          <br>Built with FastAPI · PostgreSQL · Groq LPU · SQLGlot · Chart.js
+        </div>
+      </div>
+      <a href="https://github.com/Poorva-git/QueryPulse" target="_blank"
+        class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-semibold">
+        <i data-lucide="github" class="w-4 h-4"></i> github.com/Poorva-git/QueryPulse
+      </a>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       BYODB MODAL
+  ============================================================ -->
+  <div id="custom-db-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="glass-strong max-w-lg w-full rounded-3xl p-7 shadow-2xl border border-indigo-500/40 space-y-5">
+
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-indigo-600/20 rounded-xl border border-indigo-500/30">
+            <i data-lucide="database" class="w-5 h-5 text-indigo-400"></i>
+          </div>
+          <div>
+            <div class="text-base font-bold text-white">Connect Your PostgreSQL Database</div>
+            <div class="text-xs text-slate-400 mt-0.5">Session-isolated · Never stored · Read-only</div>
+          </div>
+        </div>
+        <button onclick="closeCustomDbModal()" class="text-slate-400 hover:text-white transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed bg-indigo-950/30 border border-indigo-800/30 rounded-xl p-4">
+        Your connection URI is used <strong class="text-indigo-300">only in this browser session</strong> and is never logged, stored, or shared. QueryPulse only executes SELECT queries on your database.
       </p>
 
       <div class="space-y-2">
-        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">PostgreSQL Connection URI:</label>
-        <input type="text" id="custom-db-uri" 
-          placeholder="postgresql://user:password@ep-xyz.neon.tech/neondb?sslmode=require"
-          class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
-        <p class="text-[10px] text-slate-400">Compatible with Neon.tech, Supabase, AWS RDS, Render Postgres, or local instances.</p>
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">PostgreSQL Connection URI</label>
+        <input type="text" id="custom-db-uri"
+          placeholder="postgresql://user:password@ep-xyz.neon.tech/mydb?sslmode=require"
+          class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-600 font-mono focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+        <p class="text-[10px] text-slate-500">Works with Neon.tech, Supabase, AWS RDS, Render Postgres, and local instances.</p>
       </div>
 
-      <div id="modal-error" class="hidden p-3 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs font-mono"></div>
+      <div id="modal-error" class="hidden p-3 rounded-xl bg-rose-950/50 border border-rose-800/60 text-rose-300 text-xs font-mono"></div>
 
-      <div class="flex items-center justify-end gap-3 pt-2">
-        <button onclick="closeCustomDbModal()" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white">Cancel</button>
-        <button id="modal-connect-btn" onclick="submitCustomDb()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-2">
+      <div class="flex items-center justify-end gap-3 pt-1">
+        <button onclick="closeCustomDbModal()" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors">Cancel</button>
+        <button id="modal-connect-btn" onclick="submitCustomDb()"
+          class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-2 transition-all">
           <i data-lucide="plug" class="w-3.5 h-3.5"></i> Connect Database
         </button>
       </div>
@@ -365,18 +888,19 @@
     </div>
   </div>
 
-  <!-- ==================== JAVASCRIPT ==================== -->
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
   <script>
     const API_BASE = "http://127.0.0.1:8000";
 
-    // Generate or retrieve persistent Session ID for this browser tab
+    // Session ID per browser tab
     let sessionId = sessionStorage.getItem("qp_session_id");
     if (!sessionId) {
       sessionId = "sess_" + Math.random().toString(36).substring(2, 12);
       sessionStorage.setItem("qp_session_id", sessionId);
     }
 
-    try { if (window.lucide) lucide.createIcons(); } catch(e){}
     let currentChart = null;
     let currentData = null;
     let currentColumns = null;
@@ -384,27 +908,43 @@
     let currentActiveDB = 'dvdrental';
     let isCustomDbConnected = false;
 
-    const inputEl = document.getElementById('query-input');
-    if (inputEl) {
-      inputEl.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          executeAnalysis();
-        }
-      });
+    // Init Lucide icons
+    document.addEventListener('DOMContentLoaded', () => {
+      try { lucide.createIcons(); } catch(e) {}
+      loadDatabases();
+      setupScrollReveal();
+    });
+
+    // Enter key on textarea
+    document.addEventListener('DOMContentLoaded', () => {
+      const ta = document.getElementById('query-input');
+      if (ta) {
+        ta.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); executeAnalysis(); }
+        });
+      }
+    });
+
+    // ─── Scroll reveal ───────────────────────────────────────────
+    function setupScrollReveal() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(el => { if (el.isIntersecting) el.target.classList.add('visible'); });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     }
 
+    // ─── Sample prompts ───────────────────────────────────────────
     const PROMPTS = {
       dvdrental: [
-        { label: "Film Rentals", text: "Top 5 most rented films kaunsi hain?", icon: "film", color: "text-indigo-400" },
+        { label: "Top Rented Films", text: "Top 5 most rented films kaunsi hain?", icon: "film", color: "text-indigo-400" },
         { label: "Customer Revenue", text: "Which customer has paid the highest total amount?", icon: "wallet", color: "text-emerald-400" },
         { label: "Rating Breakdown", text: "Total films count grouped by rating", icon: "pie-chart", color: "text-violet-400" },
-        { label: "Star Cast", text: "Top 10 actors who have acted in the most films", icon: "star", color: "text-amber-400" }
+        { label: "Top Actors", text: "Top 10 actors who have acted in the most films", icon: "star", color: "text-amber-400" }
       ],
       onlinebookstore: [
-        { label: "Top Books", text: "Sabse zyada bikne wali top 5 books kaunsi hain?", icon: "book-open", color: "text-indigo-400" },
-        { label: "Author Sales", text: "Which author generated the highest total book sales?", icon: "user-check", color: "text-emerald-400" },
-        { label: "Genre Breakdown", text: "Total count of books grouped by genre/category", icon: "bookmark", color: "text-violet-400" },
+        { label: "Best Sellers", text: "Sabse zyada bikne wali top 5 books kaunsi hain?", icon: "book-open", color: "text-indigo-400" },
+        { label: "Top Author", text: "Which author generated the highest total book sales?", icon: "user-check", color: "text-emerald-400" },
+        { label: "By Genre", text: "Total count of books grouped by genre", icon: "bookmark", color: "text-violet-400" },
         { label: "Expensive Books", text: "Top 5 most expensive books in the store", icon: "dollar-sign", color: "text-amber-400" }
       ]
     };
@@ -412,42 +952,42 @@
     function renderPrompts(dbName) {
       const container = document.getElementById('quick-prompts-container');
       const list = PROMPTS[dbName] || [
-        { label: "Overview", text: "Select all table names and total rows count", icon: "database", color: "text-indigo-400" },
-        { label: "Top Records", text: "Show top 5 records from the primary table", icon: "list", color: "text-emerald-400" }
+        { label: "Overview", text: "Show top 10 rows from the first available table", icon: "database", color: "text-indigo-400" },
+        { label: "Row Counts", text: "Count rows in each table", icon: "list", color: "text-emerald-400" }
       ];
       container.innerHTML = list.map(p => `
-        <button onclick="setQuery('${p.text}')" 
-          class="glass-card p-3 rounded-xl text-left transition-all hover:bg-slate-900 group">
-          <div class="flex items-center gap-1.5 ${p.color} text-xs font-bold mb-1">
+        <button onclick="setQuery('${p.text.replace(/'/g, "\\'")}')"
+          class="glass border border-slate-800 hover:border-indigo-500/50 p-4 rounded-2xl text-left transition-all hover:bg-slate-900/60 group">
+          <div class="flex items-center gap-2 ${p.color} text-xs font-bold mb-2">
             <i data-lucide="${p.icon}" class="w-3.5 h-3.5"></i> ${p.label}
           </div>
-          <p class="text-[11px] text-slate-300 font-medium truncate">${p.text}</p>
+          <p class="text-[11px] text-slate-400 group-hover:text-slate-300 leading-relaxed">${p.text}</p>
         </button>
       `).join('');
-      try { if (window.lucide) lucide.createIcons(); } catch(e){}
+      try { lucide.createIcons(); } catch(e) {}
     }
 
+    // ─── Database loading ─────────────────────────────────────────
     async function loadDatabases() {
       try {
         const res = await fetch(`${API_BASE}/databases`);
         const data = await res.json();
         const selector = document.getElementById('db-selector');
         selector.innerHTML = '';
-        
         data.databases.forEach(db => {
           const opt = document.createElement('option');
           opt.value = db;
-          opt.innerText = db === 'dvdrental' ? '🎬 dvdrental (Sandbox Demo)' : (db === 'onlinebookstore' ? '📚 onlinebookstore (Sandbox Demo)' : `🗄️ ${db}`);
+          opt.innerText = db === 'dvdrental' ? '🎬 dvdrental (Sandbox Demo)'
+                        : db === 'onlinebookstore' ? '📚 onlinebookstore (Sandbox Demo)'
+                        : `🗄️ ${db}`;
           if (db === data.current_database) opt.selected = true;
           selector.appendChild(opt);
         });
-
         currentActiveDB = data.current_database;
         updateDbTitles(currentActiveDB);
         loadSchema(currentActiveDB);
         renderPrompts(currentActiveDB);
       } catch (e) {
-        console.error("Could not fetch databases:", e);
         loadSchema('dvdrental');
         renderPrompts('dvdrental');
       }
@@ -457,10 +997,8 @@
       currentActiveDB = newDb;
       updateDbTitles(newDb);
       renderPrompts(newDb);
-      
-      document.getElementById('table-list').innerHTML = `<div class="text-slate-500 p-4 text-center animate-pulse">Switching to ${newDb}...</div>`;
       document.getElementById('results-canvas').classList.add('hidden');
-
+      document.getElementById('table-list').innerHTML = `<div class="col-span-full text-slate-500 text-center p-6 animate-pulse">Switching to ${newDb}…</div>`;
       try {
         const res = await fetch(`${API_BASE}/switch-db`, {
           method: 'POST',
@@ -469,14 +1007,54 @@
         });
         const data = await res.json();
         renderTables(data.tables);
-      } catch (e) {
-        console.error("Error switching DB:", e);
-      }
+      } catch (e) { console.error(e); }
     }
 
+    function updateDbTitles(name) {
+      document.getElementById('prompt-db-name').innerText = name;
+    }
+
+    async function loadSchema(dbName) {
+      try {
+        const res = await fetch(`${API_BASE}/tables?db=${dbName}&session_id=${sessionId}`);
+        const data = await res.json();
+        renderTables(data);
+      } catch (e) { console.error(e); }
+    }
+
+    function renderTables(tablesData) {
+      const container = document.getElementById('table-list');
+      container.innerHTML = '';
+      const tables = Object.keys(tablesData);
+      document.getElementById('table-count').innerText = `${tables.length} tables`;
+
+      tables.forEach(tableName => {
+        const td = tablesData[tableName];
+        const div = document.createElement('div');
+        div.className = "rounded-xl border border-slate-800 bg-slate-900/60 p-3.5 hover:border-indigo-500/40 transition-colors";
+        const colsHtml = td.columns.slice(0, 4).map(c =>
+          `<span class="inline-block text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded mr-1 mb-1 font-mono">${c.name}</span>`
+        ).join('') + (td.columns.length > 4 ? `<span class="text-[10px] text-indigo-400">+${td.columns.length - 4} more</span>` : '');
+
+        div.innerHTML = `
+          <div class="font-bold text-slate-200 flex items-center justify-between mb-2">
+            <span class="flex items-center gap-1.5 text-xs">
+              <i data-lucide="table-2" class="w-3.5 h-3.5 text-indigo-400"></i> ${tableName}
+            </span>
+            <span class="text-[10px] font-mono text-slate-500">${td.columns.length} cols</span>
+          </div>
+          <div class="flex flex-wrap">${colsHtml}</div>
+        `;
+        container.appendChild(div);
+      });
+      try { lucide.createIcons(); } catch(e) {}
+    }
+
+    // ─── BYODB Modal ──────────────────────────────────────────────
     function openCustomDbModal() {
       document.getElementById('custom-db-modal').classList.remove('hidden');
       document.getElementById('modal-error').classList.add('hidden');
+      document.getElementById('custom-db-uri').value = '';
     }
 
     function closeCustomDbModal() {
@@ -489,7 +1067,7 @@
       const btn = document.getElementById('modal-connect-btn');
       if (!uri) return;
 
-      btn.innerText = "Verifying...";
+      btn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Verifying…';
       btn.disabled = true;
       errBox.classList.add('hidden');
 
@@ -499,13 +1077,13 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ session_id: sessionId, connection_uri: uri })
         });
-
         const data = await res.json();
-        btn.innerText = "Connect Database";
+        btn.innerHTML = '<i data-lucide="plug" class="w-3.5 h-3.5"></i> Connect Database';
         btn.disabled = false;
+        try { lucide.createIcons(); } catch(e){}
 
         if (!res.ok) {
-          errBox.innerText = data.detail || "Connection failed";
+          errBox.innerText = data.detail || "Connection failed. Check URI and try again.";
           errBox.classList.remove('hidden');
           return;
         }
@@ -518,13 +1096,13 @@
         updateDbTitles("Custom Database");
         renderTables(data.tables);
         renderPrompts("custom");
-        alert("🎉 Custom PostgreSQL Database connected to your session!");
 
       } catch (e) {
-        btn.innerText = "Connect Database";
+        btn.innerHTML = '<i data-lucide="plug" class="w-3.5 h-3.5"></i> Connect Database';
         btn.disabled = false;
-        errBox.innerText = e.message;
+        errBox.innerText = "Network error: " + e.message;
         errBox.classList.remove('hidden');
+        try { lucide.createIcons(); } catch(er){}
       }
     }
 
@@ -537,60 +1115,30 @@
       loadDatabases();
     }
 
-    function updateDbTitles(dbName) {
-      document.getElementById('header-db-name').innerText = dbName;
-      document.getElementById('prompt-db-name').innerText = dbName;
+    // ─── Schema & History toggles ─────────────────────────────────
+    function toggleSchema() {
+      const panel = document.getElementById('schema-panel');
+      const chev = document.getElementById('schema-chevron');
+      panel.classList.toggle('hidden');
+      chev.style.transform = panel.classList.contains('hidden') ? '' : 'rotate(180deg)';
     }
 
-    async function loadSchema(dbName) {
-      try {
-        const res = await fetch(`${API_BASE}/tables?db=${dbName}&session_id=${sessionId}`);
-        const data = await res.json();
-        renderTables(data);
-      } catch (e) {
-        console.error("Could not load schema:", e);
-      }
+    function toggleHistory() {
+      const panel = document.getElementById('history-panel');
+      const chev = document.getElementById('history-chevron');
+      panel.classList.toggle('hidden');
+      chev.style.transform = panel.classList.contains('hidden') ? '' : 'rotate(180deg)';
     }
 
-    function renderTables(tablesData) {
-      const container = document.getElementById('table-list');
-      container.innerHTML = '';
-      const tables = Object.keys(tablesData);
-      document.getElementById('table-count').innerText = `${tables.length} tables`;
-
-      tables.forEach(tableName => {
-        const tableDetails = tablesData[tableName];
-        const div = document.createElement('div');
-        div.className = "rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 hover:border-indigo-500/40 transition-colors";
-        
-        let colsHtml = tableDetails.columns.slice(0, 3).map(c => 
-          `<span class="inline-block text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded mr-1 mb-1 font-mono">${c.name}</span>`
-        ).join('');
-        
-        if(tableDetails.columns.length > 3) {
-          colsHtml += `<span class="text-[9px] text-indigo-400 font-medium">+${tableDetails.columns.length - 3} cols</span>`;
-        }
-
-        div.innerHTML = `
-          <div class="font-bold text-slate-200 flex items-center justify-between mb-1.5">
-            <span class="flex items-center gap-1.5"><i data-lucide="table-2" class="w-3.5 h-3.5 text-indigo-400"></i> ${tableName}</span>
-            <span class="text-[10px] font-mono text-slate-500">${tableDetails.columns.length}</span>
-          </div>
-          <div class="flex flex-wrap">${colsHtml}</div>
-        `;
-        container.appendChild(div);
-      });
-      try { if (window.lucide) lucide.createIcons(); } catch(e){}
-    }
-
+    // ─── Query execution ──────────────────────────────────────────
     function setQuery(text) {
       document.getElementById('query-input').value = text;
-      executeAnalysis();
+      document.getElementById('query-canvas').scrollIntoView({ behavior: 'smooth' });
+      setTimeout(executeAnalysis, 400);
     }
 
     async function executeAnalysis() {
-      const input = document.getElementById('query-input');
-      const question = input.value.trim();
+      const question = document.getElementById('query-input').value.trim();
       if (!question) return;
 
       document.getElementById('loading-state').classList.remove('hidden');
@@ -601,18 +1149,13 @@
         const res = await fetch(`${API_BASE}/ask`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            question, 
-            database: currentActiveDB,
-            session_id: sessionId 
-          })
+          body: JSON.stringify({ question, database: currentActiveDB, session_id: sessionId })
         });
-
         const data = await res.json();
         document.getElementById('loading-state').classList.add('hidden');
 
         if (!res.ok) {
-          document.getElementById('error-message').innerText = data.detail || 'An error occurred';
+          document.getElementById('error-message').innerText = data.detail || 'An error occurred.';
           document.getElementById('error-state').classList.remove('hidden');
           return;
         }
@@ -620,20 +1163,21 @@
         currentData = data.data;
         currentColumns = data.columns;
 
-        document.getElementById('results-canvas').classList.remove('hidden');
         document.getElementById('insight-text').innerText = data.insight;
         document.getElementById('sql-display').innerText = data.sql;
-        
-        // Plan & Cost Pill
-        const planCostText = data.plan_cost ? `⚡ Plan: ${data.scan_type} (Cost: ${data.plan_cost})` : `⚡ ${data.scan_type || 'Executed'}`;
-        document.getElementById('plan-pill').innerText = planCostText;
-        document.getElementById('meta-pill').innerText = `📦 ${data.row_count} rows in ${data.execution_time_sec}s (${data.database})`;
+
+        const planText = data.plan_cost
+          ? `⚡ ${data.scan_type}  |  Cost: ${data.plan_cost}`
+          : `⚡ ${data.scan_type || 'Executed'}`;
+        document.getElementById('plan-pill').innerText = planText;
+        document.getElementById('meta-pill').innerText = `📦 ${data.row_count} rows · ${data.execution_time_sec}s · ${data.database}`;
 
         renderTable(data.columns, data.data);
         renderChart(data.columns, data.data, selectedChartType);
-        updateHistory(question, data.sql, data.database);
+        addToHistory(question, data.sql, data.database);
 
-        document.getElementById('results-canvas').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('results-canvas').classList.remove('hidden');
+        document.getElementById('results-canvas').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       } catch (err) {
         document.getElementById('loading-state').classList.add('hidden');
@@ -642,73 +1186,72 @@
       }
     }
 
+    // ─── Render table ─────────────────────────────────────────────
     function renderTable(columns, rows) {
-      const thead = document.getElementById('table-head');
-      const tbody = document.getElementById('table-body');
-      
-      thead.innerHTML = `<tr>${columns.map(c => `<th class="px-4 py-2.5 font-semibold">${c}</th>`).join('')}</tr>`;
-      
-      tbody.innerHTML = rows.map((r, idx) => `
-        <tr class="${idx % 2 === 0 ? 'bg-slate-900/40' : 'bg-transparent'} hover:bg-slate-800/40 transition-colors">
-          ${columns.map(c => `<td class="px-4 py-2">${r[c] !== null ? r[c] : '<span class="text-slate-600">NULL</span>'}</td>`).join('')}
-        </tr>
-      `).join('');
+      document.getElementById('table-head').innerHTML =
+        `<tr>${columns.map(c => `<th class="px-4 py-3 font-semibold whitespace-nowrap">${c}</th>`).join('')}</tr>`;
+      document.getElementById('table-body').innerHTML = rows.map((r, i) => `
+        <tr class="${i % 2 === 0 ? 'bg-slate-900/30' : ''} hover:bg-slate-800/40 transition-colors">
+          ${columns.map(c => `<td class="px-4 py-2.5 whitespace-nowrap">${r[c] !== null && r[c] !== undefined ? r[c] : '<span class="text-slate-600">NULL</span>'}</td>`).join('')}
+        </tr>`).join('');
     }
 
+    // ─── Render chart ─────────────────────────────────────────────
     function renderChart(columns, rows, type = 'bar') {
       const ctx = document.getElementById('analytics-chart').getContext('2d');
-      const noChartMsg = document.getElementById('no-chart-msg');
-
+      const noMsg = document.getElementById('no-chart-msg');
       if (currentChart) currentChart.destroy();
 
-      if (!rows || rows.length === 0 || columns.length < 2) {
-        noChartMsg.classList.remove('hidden');
-        return;
-      }
+      if (!rows || rows.length === 0 || columns.length < 2) { noMsg.classList.remove('hidden'); return; }
 
       const sample = rows[0];
-      const numericCol = columns.find(c => typeof sample[c] === 'number');
-      const labelCol = columns.find(c => c !== numericCol);
+      const numCol = columns.find(c => typeof sample[c] === 'number');
+      const lblCol = columns.find(c => c !== numCol);
+      if (!numCol || !lblCol) { noMsg.classList.remove('hidden'); return; }
+      noMsg.classList.add('hidden');
 
-      if (!numericCol || !labelCol) {
-        noChartMsg.classList.remove('hidden');
-        return;
-      }
-
-      noChartMsg.classList.add('hidden');
-
-      const labels = rows.slice(0, 15).map(r => String(r[labelCol]));
-      const values = rows.slice(0, 15).map(r => r[numericCol]);
-
-      const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#06b6d4'];
+      const labels = rows.slice(0, 15).map(r => String(r[lblCol]));
+      const values = rows.slice(0, 15).map(r => r[numCol]);
+      const palette = ['#6366f1','#8b5cf6','#ec4899','#3b82f6','#10b981','#f59e0b','#06b6d4','#a855f7','#f97316','#14b8a6'];
 
       currentChart = new Chart(ctx, {
-        type: type,
+        type,
         data: {
-          labels: labels,
+          labels,
           datasets: [{
-            label: numericCol.replace('_', ' ').toUpperCase(),
+            label: numCol.replace(/_/g, ' ').toUpperCase(),
             data: values,
-            backgroundColor: type === 'doughnut' ? colors : 'rgba(99, 102, 241, 0.8)',
-            borderColor: type === 'doughnut' ? '#0f172a' : '#6366f1',
-            borderWidth: 1.5,
-            borderRadius: type === 'bar' ? 6 : 0,
-            fill: type === 'line' ? { target: 'origin', above: 'rgba(99, 102, 241, 0.15)' } : false,
-            tension: 0.3
+            backgroundColor: type === 'doughnut' ? palette : 'rgba(99,102,241,0.85)',
+            borderColor: type === 'doughnut' ? '#060810' : '#6366f1',
+            borderWidth: type === 'doughnut' ? 3 : 1.5,
+            borderRadius: type === 'bar' ? 8 : 0,
+            fill: type === 'line' ? { target: 'origin', above: 'rgba(99,102,241,0.12)' } : false,
+            tension: 0.35,
+            pointBackgroundColor: '#6366f1',
+            pointRadius: type === 'line' ? 4 : 0,
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: { duration: 600 },
           plugins: {
-            legend: { 
+            legend: {
               display: type === 'doughnut',
-              labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
+              labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 }, padding: 16 }
+            },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              borderColor: '#334155',
+              borderWidth: 1,
+              titleColor: '#e2e8f0',
+              bodyColor: '#94a3b8',
+              padding: 10,
             }
           },
           scales: type === 'doughnut' ? {} : {
-            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { display: false } },
-            y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } }
+            x: { ticks: { color: '#475569', font: { size: 11 } }, grid: { display: false }, border: { color: '#1e293b' } },
+            y: { ticks: { color: '#475569', font: { size: 11 } }, grid: { color: '#0f172a' }, border: { color: '#1e293b' } }
           }
         }
       });
@@ -716,69 +1259,65 @@
 
     function changeChartType(type) {
       selectedChartType = type;
-      if (currentColumns && currentData) {
-        renderChart(currentColumns, currentData, type);
-      }
+      if (currentColumns && currentData) renderChart(currentColumns, currentData, type);
     }
 
     function switchTab(type) {
       const chartTab = document.getElementById('chart-tab');
       const tableTab = document.getElementById('table-tab');
-      const chartBtn = document.getElementById('tab-chart-btn');
-      const tableBtn = document.getElementById('tab-table-btn');
-
+      const cbtn = document.getElementById('tab-chart-btn');
+      const tbtn = document.getElementById('tab-table-btn');
+      const on  = "px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white flex items-center gap-2 shadow-sm transition-all";
+      const off = "px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 transition-all";
       if (type === 'chart') {
-        chartTab.classList.remove('hidden');
-        tableTab.classList.add('hidden');
-        chartBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white flex items-center gap-1.5 transition-all";
-        tableBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5 transition-all";
+        chartTab.classList.remove('hidden'); tableTab.classList.add('hidden');
+        cbtn.className = on; tbtn.className = off;
       } else {
-        chartTab.classList.add('hidden');
-        tableTab.classList.remove('hidden');
-        tableBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white flex items-center gap-1.5 transition-all";
-        chartBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5 transition-all";
+        tableTab.classList.remove('hidden'); chartTab.classList.add('hidden');
+        tbtn.className = on; cbtn.className = off;
       }
     }
 
-    function updateHistory(question, sql, db) {
+    // ─── History ──────────────────────────────────────────────────
+    function addToHistory(question, sql, db) {
       const container = document.getElementById('history-list');
+      // Remove placeholder
+      const placeholder = container.querySelector('p');
+      if (placeholder) placeholder.remove();
+
       const div = document.createElement('div');
-      div.className = "p-2 rounded bg-slate-900 border border-slate-800 text-xs cursor-pointer hover:border-indigo-500/50 transition-colors";
+      div.className = "p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs cursor-pointer hover:border-indigo-500/40 transition-colors";
       div.innerHTML = `
-        <div class="flex items-center justify-between mb-0.5">
-          <span class="text-slate-200 font-medium truncate">${question}</span>
-          <span class="text-[9px] font-mono text-indigo-400 bg-indigo-950 px-1 rounded">${db}</span>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-slate-200 font-semibold truncate max-w-[75%]">${question}</span>
+          <span class="text-[9px] font-mono text-indigo-400 bg-indigo-950 px-1.5 py-0.5 rounded">${db}</span>
         </div>
         <span class="text-emerald-400 font-mono text-[10px] block truncate">${sql}</span>
       `;
-      div.onclick = () => {
-        document.getElementById('query-input').value = question;
-        executeAnalysis();
-      };
+      div.onclick = () => { document.getElementById('query-input').value = question; executeAnalysis(); };
       container.prepend(div);
     }
 
+    // ─── Utilities ────────────────────────────────────────────────
     function copySQL() {
-      const sql = document.getElementById('sql-display').innerText;
-      navigator.clipboard.writeText(sql);
-      alert("SQL Query copied to clipboard!");
+      navigator.clipboard.writeText(document.getElementById('sql-display').innerText);
+      const btn = event.currentTarget;
+      btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Copied!';
+      try { lucide.createIcons(); } catch(e){}
+      setTimeout(() => { btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy'; try{lucide.createIcons();}catch(e){} }, 2000);
     }
 
     function downloadCSV() {
-      if (!currentData || currentData.length === 0) return;
+      if (!currentData || !currentData.length) return;
       const headers = currentColumns.join(',');
       const rows = currentData.map(r => currentColumns.map(c => `"${r[c] !== null ? r[c] : ''}"`).join(','));
-      const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join('\n');
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `querypulse_${currentActiveDB}_export_${Date.now()}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const csv = "data:text/csv;charset=utf-8," + [headers, ...rows].join('\n');
+      const a = document.createElement('a');
+      a.href = encodeURI(csv);
+      a.download = `querypulse_${currentActiveDB}_${Date.now()}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
-
-    window.onload = loadDatabases;
   </script>
+
 </body>
 </html>
