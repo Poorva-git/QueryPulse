@@ -12,6 +12,11 @@
   <img src="https://img.shields.io/badge/PostgreSQL-16+-4169E1.svg?style=for-the-badge&logo=postgresql&logoColor=white" />
   <img src="https://img.shields.io/badge/Security-AST_Guarded-emerald.svg?style=for-the-badge&logo=shield" />
   <img src="https://img.shields.io/badge/LLM-Groq_LPU-orange.svg?style=for-the-badge" />
+  <a href="https://querypulse-sok8.onrender.com/"><img src="https://img.shields.io/badge/Live_Demo-Render-success?style=for-the-badge&logo=render" /></a>
+</p>
+
+<p align="center">
+  <a href="https://querypulse-sok8.onrender.com/"><strong>🚀 Click Here to Try the Live Interactive Demo</strong></a>
 </p>
 
 ---
