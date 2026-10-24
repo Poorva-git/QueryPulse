@@ -892,7 +892,8 @@
        JAVASCRIPT
   ============================================================ -->
   <script>
-    const API_BASE = "http://127.0.0.1:8000";
+    // Automatically use current origin (works on both localhost and live Render domain)
+    const API_BASE = window.location.origin;
 
     // Session ID per browser tab
     let sessionId = sessionStorage.getItem("qp_session_id");
