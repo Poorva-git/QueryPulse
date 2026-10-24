@@ -21,8 +21,8 @@
             mono: ['"JetBrains Mono"', 'monospace'],
           },
           animation: {
-            'gradient-x': 'gradient-x 7s ease infinite',
-            'float': 'float 5s ease-in-out infinite',
+            'gradient-x': 'gradient-x 8s ease infinite',
+            'float': 'float 6s ease-in-out infinite',
           },
           keyframes: {
             'gradient-x': {
@@ -31,7 +31,7 @@
             },
             'float': {
               '0%, 100%': { transform: 'translateY(0px)' },
-              '50%': { transform: 'translateY(-8px)' },
+              '50%': { transform: 'translateY(-10px)' },
             }
           }
         }
@@ -40,37 +40,39 @@
   </script>
 
   <style>
-    body { background-color: #060810; color: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { background-color: #060810; color: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; }
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    .glass { background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.07); }
+    .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.07); }
     .glass-strong { background: rgba(10, 14, 28, 0.88); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.08); }
     .hero-glow {
-      background: radial-gradient(ellipse 80% 50% at 50% -5%, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.06) 45%, transparent 75%);
+      background: radial-gradient(ellipse 80% 50% at 50% -8%, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.07) 48%, transparent 75%);
     }
     .feat-card { transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
     .feat-card:hover { transform: translateY(-5px); border-color: rgba(99,102,241,0.45) !important; box-shadow: 0 16px 40px rgba(99,102,241,0.1); }
     .grad-text {
-      background: linear-gradient(135deg, #818cf8 0%, #c084fc 45%, #f472b6 100%);
+      background: linear-gradient(135deg, #818cf8 0%, #c084fc 40%, #f472b6 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
+    .tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; }
   </style>
 </head>
 
 <body class="overflow-x-hidden">
 
-  <!-- ==================== TOP NAVBAR ==================== -->
+  <!-- ==================== STICKY TOP NAVBAR (IMAGE 1 STYLE) ==================== -->
   <nav class="fixed top-0 left-0 right-0 z-50 h-16 glass-strong border-b border-slate-800/70 flex items-center px-6 sm:px-10 justify-between">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/15">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/15">
         <i data-lucide="zap" class="w-4.5 h-4.5 text-white"></i>
       </div>
-      <div>
+      <div class="flex items-center gap-2">
         <span class="text-sm font-extrabold text-white tracking-tight">QueryPulse</span>
-        <span class="ml-2 text-[9px] font-bold uppercase bg-gradient-to-r from-indigo-500 to-violet-500 text-white px-2 py-0.5 rounded-full">AI Data Engine</span>
+        <span class="text-[9px] font-bold uppercase bg-gradient-to-r from-indigo-500 to-violet-500 text-white px-2 py-0.5 rounded-full">Enterprise</span>
       </div>
     </div>
 
@@ -79,40 +81,29 @@
       <a href="#features" class="hover:text-white transition-colors">Features</a>
       <a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a>
       <a href="#architecture" class="hover:text-white transition-colors">Architecture</a>
-      <a href="#query-canvas" class="hover:text-white transition-colors">Try It Live</a>
+      <a href="#query-canvas" class="hover:text-white transition-colors">Try It</a>
     </div>
 
-    <!-- Active DB & Connect Button -->
-    <div class="flex items-center gap-3">
-      <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-slate-400">DB:</span>
-        <span id="nav-db-name" class="font-mono text-indigo-300 font-semibold">dvdrental (Demo)</span>
-      </div>
-
-      <button onclick="openCustomDbModal()" 
-        class="px-3.5 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 transition-all">
-        <i data-lucide="database" class="w-3.5 h-3.5"></i>
-        <span>Connect DB</span>
-      </button>
-
-      <button id="disconnect-btn" onclick="disconnectCustomDb()" 
-        class="hidden px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-1 transition-all">
-        <i data-lucide="power" class="w-3.5 h-3.5"></i>
-        <span>Reset</span>
-      </button>
+    <!-- Status Badges -->
+    <div class="flex items-center gap-2.5">
+      <span class="tag bg-emerald-950/70 border border-emerald-700/40 text-emerald-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> AST Guard Active
+      </span>
+      <span class="tag bg-indigo-950/70 border border-indigo-700/40 text-indigo-300">
+        <i data-lucide="cpu" class="w-3 h-3"></i> Groq LPU
+      </span>
     </div>
   </nav>
 
-  <!-- ==================== GRAND HERO SECTION (CENTER BADA BADA QUERYPULSE) ==================== -->
-  <section class="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 hero-glow overflow-hidden">
+  <!-- ==================== GRAND HERO SECTION (IMAGE 1 EXACT REPLICA) ==================== -->
+  <section class="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20 pb-12 hero-glow overflow-hidden">
     
     <div class="max-w-4xl mx-auto space-y-6">
 
-      <!-- Badge -->
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 text-xs font-semibold shadow-sm backdrop-blur">
+      <!-- Center Pill -->
+      <div class="inline-flex items-center gap-2 tag bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 backdrop-blur">
         <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i>
-        <span>Zero-Trust Natural Language PostgreSQL Engine</span>
+        <span>Natural Language &rarr; SQL &rarr; Visual Insights &rarr; AI Analysis</span>
       </div>
 
       <!-- Grand Center Heading -->
@@ -120,35 +111,38 @@
         <span class="grad-text animate-gradient-x">QueryPulse</span>
       </h1>
 
-      <!-- Tagline -->
+      <!-- Subtitle -->
       <p class="text-xl sm:text-2xl font-bold text-slate-200 tracking-wide max-w-2xl mx-auto">
         Intelligent Conversational Data Engine for PostgreSQL
       </p>
 
-      <!-- Clean, Simple Intro Description -->
+      <!-- Description -->
       <p class="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-        Ask any business question in plain <strong class="text-slate-200">English or Hinglish</strong>. 
-        QueryPulse translates your thoughts into safe SQL, calculates database execution plans, and generates live charts with AI executive insights.
+        Ask any business question in <strong class="text-slate-200">plain English or Hinglish</strong> — 
+        QueryPulse generates verified SQL, enforces zero-trust AST security, executes safely, and renders real-time visual charts with AI-powered executive insights.
       </p>
 
-      <!-- Feature Badges Row -->
-      <div class="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+      <!-- Feature Badges Row (5 Pills from Image 1) -->
+      <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
         <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
-          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> Safe Read-Only SQL
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> Zero-Trust AST Guard
         </div>
         <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
-          <i data-lucide="gauge" class="w-3.5 h-3.5 text-amber-400"></i> Query Cost Analyzer
+          <i data-lucide="plug" class="w-3.5 h-3.5 text-indigo-400"></i> BYODB — Connect Any Postgres
         </div>
         <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
-          <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-violet-400"></i> Instant Visual Charts
+          <i data-lucide="gauge" class="w-3.5 h-3.5 text-amber-400"></i> EXPLAIN Cost Analyzer
         </div>
         <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
-          <i data-lucide="plug" class="w-3.5 h-3.5 text-pink-400"></i> BYODB (Connect Any DB)
+          <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-violet-400"></i> Auto Chart Visualizer
+        </div>
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl glass border border-slate-700/60 text-slate-300 text-xs font-semibold">
+          <i data-lucide="cpu" class="w-3.5 h-3.5 text-pink-400"></i> Groq LPU + GPT-o-120B
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center justify-center gap-4 pt-4">
+      <div class="flex items-center justify-center gap-4 pt-3">
         <a href="#query-canvas"
           class="px-8 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-600/30 flex items-center gap-2.5 transition-all transform hover:scale-105 active:scale-95">
           <i data-lucide="play" class="w-4 h-4 fill-white"></i>
@@ -162,33 +156,45 @@
 
     </div>
 
-    <!-- Scroll down pill -->
-    <div class="pt-12 flex flex-col items-center gap-1 text-slate-500 animate-float">
-      <span class="text-[10px] uppercase font-bold tracking-widest">Scroll down to explore</span>
+    <!-- Scroll Indicator -->
+    <div class="pt-10 flex flex-col items-center gap-1 text-slate-500 animate-float">
+      <span class="text-[10px] uppercase font-bold tracking-widest">Scroll to explore</span>
       <i data-lucide="chevron-down" class="w-4 h-4"></i>
     </div>
 
   </section>
 
-  <!-- ==================== SHORT & SIMPLE FEATURES SECTION ==================== -->
+  <!-- ==================== SUMMARIZED FEATURES SECTION (GENERALIZED & CRISP) ==================== -->
   <section id="features" class="py-20 px-6 sm:px-10 max-w-6xl mx-auto space-y-12">
     
     <div class="text-center space-y-3">
-      <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Key Capabilities</h2>
-      <p class="text-sm text-slate-400 max-w-xl mx-auto">Everything you need to turn natural questions into business intelligence without writing SQL.</p>
+      <div class="tag bg-violet-950/60 border border-violet-500/30 text-violet-300 inline-flex">
+        <i data-lucide="layers" class="w-3.5 h-3.5"></i> Core Capabilities
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+        Instant Insights from Any PostgreSQL Database
+      </h2>
+      <p class="text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
+        Built for decision-makers, product managers, and developers to explore complex data without technical roadblocks.
+      </p>
     </div>
 
+    <!-- 6 Summarized Cards (Short & Human Friendly) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
       
       <!-- Card 1 -->
       <div class="feat-card glass border border-slate-800 rounded-2xl p-6 space-y-3">
         <div class="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center text-indigo-400">
-          <i data-lucide="message-square" class="w-5 h-5"></i>
+          <i data-lucide="message-square-code" class="w-5 h-5"></i>
         </div>
-        <h3 class="text-base font-bold text-white">English & Hinglish to SQL</h3>
+        <h3 class="text-base font-bold text-white">Natural Language to SQL</h3>
         <p class="text-xs text-slate-400 leading-relaxed">
-          Ask questions naturally like <em>"Top 5 most rented films kaunsi hain?"</em> — the AI understands your schema and writes optimized queries.
+          Ask questions naturally in English or Hinglish. Generates schema-aware PostgreSQL queries in milliseconds via high-speed AI inference.
         </p>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <span class="tag bg-indigo-950/50 text-indigo-300 text-[10px]">English & Hinglish</span>
+          <span class="tag bg-indigo-950/50 text-indigo-300 text-[10px]">Instant SQL</span>
+        </div>
       </div>
 
       <!-- Card 2 -->
@@ -196,10 +202,14 @@
         <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
           <i data-lucide="shield-check" class="w-5 h-5"></i>
         </div>
-        <h3 class="text-base font-bold text-white">AST Security Sandbox</h3>
+        <h3 class="text-base font-bold text-white">Zero-Trust Security Guard</h3>
         <p class="text-xs text-slate-400 leading-relaxed">
-          Mathematical syntax tree validation blocks harmful operations (<code class="text-emerald-400 font-mono">DROP</code>, <code class="text-emerald-400 font-mono">DELETE</code>, injections) before execution.
+          Every statement is parsed to guarantee safe, read-only operations. Dangerous mutations like <code class="text-emerald-400 font-mono">DROP</code> or <code class="text-emerald-400 font-mono">DELETE</code> are rejected automatically.
         </p>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <span class="tag bg-emerald-950/50 text-emerald-300 text-[10px]">Read-Only Sandbox</span>
+          <span class="tag bg-emerald-950/50 text-emerald-300 text-[10px]">Safe Execution</span>
+        </div>
       </div>
 
       <!-- Card 3 -->
@@ -207,21 +217,29 @@
         <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-amber-400">
           <i data-lucide="gauge" class="w-5 h-5"></i>
         </div>
-        <h3 class="text-base font-bold text-white">Postgres Query Plan & Cost</h3>
+        <h3 class="text-base font-bold text-white">Query Cost & Plan Analyzer</h3>
         <p class="text-xs text-slate-400 leading-relaxed">
-          Runs internal <code class="text-amber-400 font-mono">EXPLAIN</code> to calculate query execution cost and primary scan type in real-time.
+          Inspects PostgreSQL's execution plan behind the scenes, reporting query cost and scan types to ensure high performance and resource safety.
         </p>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <span class="tag bg-amber-950/50 text-amber-300 text-[10px]">Postgres EXPLAIN</span>
+          <span class="tag bg-amber-950/50 text-amber-300 text-[10px]">Cost Estimates</span>
+        </div>
       </div>
 
       <!-- Card 4 -->
       <div class="feat-card glass border border-slate-800 rounded-2xl p-6 space-y-3">
         <div class="w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-violet-400">
-          <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+          <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
         </div>
         <h3 class="text-base font-bold text-white">Auto Visual Charts</h3>
         <p class="text-xs text-slate-400 leading-relaxed">
-          Instantly generates interactive Bar, Line, or Doughnut charts. One click to switch views or download raw results as CSV.
+          Automatically turns relational rows into interactive Bar, Line, or Doughnut charts. One click to toggle data tables or download CSV.
         </p>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <span class="tag bg-violet-950/50 text-violet-300 text-[10px]">Dynamic Charts</span>
+          <span class="tag bg-violet-950/50 text-violet-300 text-[10px]">CSV Export</span>
+        </div>
       </div>
 
       <!-- Card 5 -->
@@ -229,10 +247,14 @@
         <div class="w-10 h-10 rounded-xl bg-pink-500/15 border border-pink-500/25 flex items-center justify-center text-pink-400">
           <i data-lucide="plug" class="w-5 h-5"></i>
         </div>
-        <h3 class="text-base font-bold text-white">Bring Your Own Database (BYODB)</h3>
+        <h3 class="text-base font-bold text-white">Connect Any Database (BYODB)</h3>
         <p class="text-xs text-slate-400 leading-relaxed">
-          Connect your own Supabase, Neon, or local database in seconds. Credentials stay in your active browser session only.
+          Plug in your own PostgreSQL instance (Neon, Supabase, AWS RDS, or local). Your credentials stay securely isolated in your active browser session.
         </p>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <span class="tag bg-pink-950/50 text-pink-300 text-[10px]">Session Isolated</span>
+          <span class="tag bg-pink-950/50 text-pink-300 text-[10px]">1-Click Connect</span>
+        </div>
       </div>
 
       <!-- Card 6 -->
@@ -242,67 +264,90 @@
         </div>
         <h3 class="text-base font-bold text-white">Executive Business Insights</h3>
         <p class="text-xs text-slate-400 leading-relaxed">
-          Every query generates a 2-sentence executive summary explaining what the numbers actually mean for decision-making.
+          Translates raw numbers into a concise 2-sentence executive summary explaining what the result means for business decisions.
         </p>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <span class="tag bg-cyan-950/50 text-cyan-300 text-[10px]">AI Business Context</span>
+          <span class="tag bg-cyan-950/50 text-cyan-300 text-[10px]">Ready to Present</span>
+        </div>
       </div>
 
     </div>
   </section>
 
-  <!-- ==================== SHORT & SIMPLE ARCHITECTURE SECTION ==================== -->
-  <section id="architecture" class="py-16 px-6 sm:px-10 max-w-6xl mx-auto space-y-10 border-t border-slate-800/60">
-    
+  <!-- ==================== HOW IT WORKS PIPELINE ==================== -->
+  <section id="how-it-works" class="py-16 px-6 sm:px-10 max-w-5xl mx-auto space-y-8 border-t border-slate-800/60">
     <div class="text-center space-y-2">
-      <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">System Architecture</h2>
-      <p class="text-xs sm:text-sm text-slate-400">Clean 4-tier design built for performance and explainability.</p>
+      <div class="tag bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 inline-flex">
+        <i data-lucide="workflow" class="w-3.5 h-3.5"></i> Execution Pipeline
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">From Question to Insight in Under 2 Seconds</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+      <div class="glass p-5 rounded-2xl space-y-2">
+        <div class="text-xs font-bold text-indigo-400 uppercase">1. Prompt</div>
+        <div class="text-sm font-semibold text-white">Natural Question</div>
+        <p class="text-[11px] text-slate-400">Ask in English or Hinglish</p>
+      </div>
+      <div class="glass p-5 rounded-2xl space-y-2">
+        <div class="text-xs font-bold text-indigo-400 uppercase">2. AI Synthesis</div>
+        <div class="text-sm font-semibold text-white">Schema-Aware SQL</div>
+        <p class="text-[11px] text-slate-400">Groq LPU generates PostgreSQL</p>
+      </div>
+      <div class="glass p-5 rounded-2xl space-y-2">
+        <div class="text-xs font-bold text-emerald-400 uppercase">3. Security Check</div>
+        <div class="text-sm font-semibold text-white">AST Validation</div>
+        <p class="text-[11px] text-slate-400">Blocks modifications & enforces safety</p>
+      </div>
+      <div class="glass p-5 rounded-2xl space-y-2">
+        <div class="text-xs font-bold text-violet-400 uppercase">4. Delivery</div>
+        <div class="text-sm font-semibold text-white">Visuals & Summary</div>
+        <p class="text-[11px] text-slate-400">Interactive charts + business insights</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CLEAN ARCHITECTURE SECTION ==================== -->
+  <section id="architecture" class="py-16 px-6 sm:px-10 max-w-6xl mx-auto space-y-8 border-t border-slate-800/60">
+    <div class="text-center space-y-2">
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Technology Architecture</h2>
+      <p class="text-xs sm:text-sm text-slate-400">Built with modern, production-grade open-source components.</p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      
-      <div class="glass border border-slate-800 rounded-2xl p-5 space-y-2">
-        <div class="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
-          <i data-lucide="server" class="w-4 h-4"></i> Backend
-        </div>
-        <div class="text-sm font-bold text-white">FastAPI & Python</div>
-        <p class="text-[11px] text-slate-400">Async REST endpoints, multi-engine connection pooling, CORS handling.</p>
+      <div class="glass p-5 rounded-2xl space-y-1.5">
+        <div class="text-xs font-bold text-indigo-400 uppercase">Backend</div>
+        <div class="text-sm font-bold text-white">FastAPI & Python 3.11</div>
+        <p class="text-[11px] text-slate-400">High-performance async REST API with multi-engine connection pooling.</p>
       </div>
-
-      <div class="glass border border-slate-800 rounded-2xl p-5 space-y-2">
-        <div class="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-          <i data-lucide="shield" class="w-4 h-4"></i> Security
-        </div>
-        <div class="text-sm font-bold text-white">SQLGlot AST Sandbox</div>
-        <p class="text-[11px] text-slate-400">Mathematical syntax tree validation. Blocks injections & enforces row limits.</p>
+      <div class="glass p-5 rounded-2xl space-y-1.5">
+        <div class="text-xs font-bold text-emerald-400 uppercase">Security</div>
+        <div class="text-sm font-bold text-white">SQLGlot AST Parser</div>
+        <p class="text-[11px] text-slate-400">Mathematical syntax tree validation preventing SQL injection and data mutation.</p>
       </div>
-
-      <div class="glass border border-slate-800 rounded-2xl p-5 space-y-2">
-        <div class="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
-          <i data-lucide="database" class="w-4 h-4"></i> Database
-        </div>
+      <div class="glass p-5 rounded-2xl space-y-1.5">
+        <div class="text-xs font-bold text-amber-400 uppercase">Database</div>
         <div class="text-sm font-bold text-white">PostgreSQL 16 Cloud</div>
-        <p class="text-[11px] text-slate-400">Neon.tech Serverless Postgres. Dynamic schema & EXPLAIN plan cost analysis.</p>
+        <p class="text-[11px] text-slate-400">Hosted on Neon.tech serverless cloud with live EXPLAIN query plan analysis.</p>
       </div>
-
-      <div class="glass border border-slate-800 rounded-2xl p-5 space-y-2">
-        <div class="flex items-center gap-2 text-violet-400 text-xs font-bold uppercase tracking-wider">
-          <i data-lucide="layout" class="w-4 h-4"></i> Frontend
-        </div>
+      <div class="glass p-5 rounded-2xl space-y-1.5">
+        <div class="text-xs font-bold text-violet-400 uppercase">Frontend</div>
         <div class="text-sm font-bold text-white">Tailwind & Chart.js</div>
-        <p class="text-[11px] text-slate-400">Responsive dark dashboard, interactive visual graphs, and CSV exporter.</p>
+        <p class="text-[11px] text-slate-400">Responsive dark dashboard with real-time interactive data visualizations.</p>
       </div>
-
     </div>
   </section>
 
-  <!-- ==================== QUERY CANVAS — THE ACTUAL APPLICATION ==================== -->
+  <!-- ==================== QUERY CANVAS — LIVE APPLICATION ==================== -->
   <section id="query-canvas" class="py-20 px-6 sm:px-10 max-w-5xl mx-auto space-y-8 border-t border-slate-800/60">
     
     <div class="text-center space-y-2">
       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold">
-        <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> Interactive Demo
+        <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> Interactive Live Workspace
       </div>
-      <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Try QueryPulse on Live Data</h2>
-      <p class="text-xs sm:text-sm text-slate-400">Select a database, click any sample prompt or type your own question.</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Ask Your Database Anything</h2>
+      <p class="text-xs sm:text-sm text-slate-400">Type your query or click any sample prompt below.</p>
     </div>
 
     <!-- Active DB Switcher Row -->
@@ -325,6 +370,11 @@
           <i data-lucide="plug" class="w-3.5 h-3.5"></i>
           <span>Connect Your DB</span>
         </button>
+        <button id="disconnect-btn" onclick="disconnectCustomDb()" 
+          class="hidden px-3.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-1.5 transition-all">
+          <i data-lucide="power" class="w-3.5 h-3.5"></i>
+          <span>Revert</span>
+        </button>
       </div>
     </div>
 
@@ -334,14 +384,14 @@
       <div class="flex items-center justify-between">
         <label class="text-sm font-bold text-slate-200 flex items-center gap-2">
           <i data-lucide="message-square-code" class="w-4 h-4 text-indigo-400"></i>
-          Ask a question on <span id="prompt-db-name" class="text-indigo-400 font-mono">dvdrental</span>:
+          Ask a business question on <span id="prompt-db-name" class="text-indigo-400 font-mono">dvdrental</span>:
         </label>
-        <span class="text-[11px] text-slate-400 hidden sm:inline">Press <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-slate-300">Enter</kbd> to run</span>
+        <span class="text-[11px] text-slate-400 hidden sm:inline">Press <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-slate-300">Enter</kbd> to execute</span>
       </div>
 
       <div class="relative">
         <textarea id="query-input" rows="2" 
-          placeholder="e.g. 'Top 5 most rented films kaunsi hain?' or 'Show me the highest revenue generating customers'"
+          placeholder="e.g. 'Top 5 most rented films kaunsi hain?' or 'Which customer paid the highest total amount?'"
           class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 font-sans resize-none pr-32 transition-all"></textarea>
         
         <button id="run-btn" onclick="executeAnalysis()"
@@ -353,7 +403,7 @@
 
       <!-- Quick 1-Click Example Prompts -->
       <div class="space-y-2 pt-1">
-        <span class="text-xs text-slate-400 font-semibold block">Click any sample prompt to run instantly:</span>
+        <span class="text-xs text-slate-400 font-semibold block">Click to test with sample questions:</span>
         <div id="quick-prompts-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
           <!-- Injected by JS -->
         </div>
@@ -459,7 +509,7 @@
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
           <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i>
-          Database Tables (<span id="table-count">15</span> tables available)
+          Database Schema Explorer (<span id="table-count">15</span> tables available)
         </span>
         <span class="text-[11px] text-slate-500">Live PostgreSQL Catalog</span>
       </div>
@@ -472,10 +522,10 @@
 
   <!-- ==================== SIMPLE FOOTER ==================== -->
   <footer class="border-t border-slate-800/60 py-8 text-center text-xs text-slate-500">
-    <p>QueryPulse — Final Year B.Tech CSE Placement Portfolio Project · Intelligent Conversational Data Engine</p>
+    <p>QueryPulse — Final Year B.Tech CSE Project · Intelligent Conversational Data Engine</p>
   </footer>
 
-  <!-- ==================== CONNECT DB MODAL (WITH SIMPLE FORM + DIRECT URI) ==================== -->
+  <!-- ==================== CONNECT DB MODAL ==================== -->
   <div id="custom-db-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="glass-strong max-w-lg w-full rounded-2xl p-6 shadow-2xl border border-indigo-500/40 space-y-4">
       
