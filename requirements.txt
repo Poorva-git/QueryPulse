@@ -1,11 +1,9 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 groq
 python-dotenv
 sqlglot
 pandas
-plotly
-streamlit
-pytest    
+pytest
